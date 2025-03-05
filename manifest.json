@@ -1,0 +1,27 @@
+{
+    "manifest_version": 3,
+    "name": "Quarterly Data Analysis",
+    "version": "1.0",
+    "description": "Extracts quarterly financial data and calculates correlation",
+    "permissions": [
+      "activeTab", 
+      "scripting", 
+      "storage"  
+    ],
+    "host_permissions": ["https://www.screener.in/company/*"],
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://www.screener.in/company/*"],
+        "js": ["content.js"]
+      }
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": ["libs/chart.min.js"],
+        "matches": ["<all_urls>"]
+      }
+    ]
+  }

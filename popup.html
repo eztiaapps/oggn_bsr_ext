@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quarterly Data Analysis</title>
+    <style>
+        body {
+            width: 600px;
+            min-height: 500px;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .container {
+            max-width: 90%;
+            margin: auto;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #f1f1f1;
+            border-radius: 4px;
+        }
+        .data-label {
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .data-value {
+            color: #34495e;
+            text-align: right;
+        }
+        #errorMessage {
+            color: red;
+            text-align: center;
+            display: none;
+        }
+        .loading {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .eps-growth-positive {
+            color: green;
+        }
+        .eps-growth-negative {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quarterly Financial Analysis</h2>
+
+        <div id="errorMessage">Unable to retrieve financial data. Please try again.</div>
+
+        <div class="data-row">
+            <span class="data-label">Report Dates:</span>
+            <span id="reportDates" class="data-value loading">Loading...</span>
+        </div>
+
+        <div class="data-row">
+            <span class="data-label">Sales Data:</span>
+            <span id="salesData" class="data-value loading">Loading...</span>
+        </div>
+
+        <div class="data-row">
+            <span class="data-label">Expenses Data:</span>
+            <span id="expensesData" class="data-value loading">Loading...</span>
+        </div>
+
+        <div class="data-row">
+            <span class="data-label">Profit (Sales - Expenses):</span>
+            <span id="profitData" class="data-value loading">Calculating...</span>
+        </div>
+
+        <div class="data-row">
+            <span class="data-label">Profit Growth CAGR:</span>
+            <span id="profitCAGR" class="data-value loading">Calculating...</span>
+        </div>
+
+        <div class="data-row">
+            <span class="data-label">EPS Data:</span>
+            <span id="epsData" class="data-value loading">Loading...</span>
+        </div>
+
+        <div class="data-row">
+            <span class="data-label">EPS Growth (QoQ):</span>
+            <span id="epsGrowth" class="data-value loading">Calculating...</span>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
