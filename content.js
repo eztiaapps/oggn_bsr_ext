@@ -175,6 +175,8 @@ function calculateFinancialMetrics(data) {
     let nfat = [];
     let avgNfat3Y = [];
     let npmPercent = [];
+    let avgNpm3Y = [];
+
 
     for (let i = 0; i < numPeriods; i++) {
         const currentSales = parseValue(sales, i);
@@ -199,6 +201,14 @@ function calculateFinancialMetrics(data) {
         // NPM% Calculation
         let npmValue = currentSales > 0 ? (currentProfitForEPS / currentSales) * 100 : 0;
         npmPercent.push(npmValue);
+
+        // 3-Year Avg. NPM% Calculation
+        if (i < 3) {
+            avgNpm3Y.push(0); // Not enough data for 3-year average
+        } else {
+            let avgValue = (npmPercent[i - 2] + npmPercent[i - 1] + npmPercent[i]) / 3;
+            avgNpm3Y.push(avgValue);
+        }
     }
 
     console.log("✅ NFAT:", nfat);
@@ -208,6 +218,8 @@ function calculateFinancialMetrics(data) {
     metrics.nfat = nfat;
     metrics.avgNfat3Y = avgNfat3Y;
     metrics.npmPercent = npmPercent;
+    metrics.avgNpm3Y = avgNpm3Y;
+
     
     return metrics;
 }

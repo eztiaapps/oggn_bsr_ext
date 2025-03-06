@@ -83,13 +83,16 @@ document.getElementById("plotTable").addEventListener("click", function () {
     const nfatValues = extractedData.calculatedMetrics.nfat || [];
     let avgNfatValues = extractedData.calculatedMetrics.avgNfat3Y || [];
     let npmPercentValues = extractedData.calculatedMetrics.npmPercent || [];
+    let avgNpm3YValues = extractedData.calculatedMetrics.avgNpm3Y || [];
 
     // 🛠 Fix empty values for display
     avgNfatValues = avgNfatValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
     npmPercentValues = npmPercentValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+    avgNpm3YValues = avgNpm3YValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
 
     console.log("✅ Cleaned 3-Year Avg. NFAT for Display:", avgNfatValues);
     console.log("✅ Cleaned NPM% for Display:", npmPercentValues);
+    console.log("\u2705 Cleaned 3-Year Avg. NPM% for Display:", avgNpm3YValues);
 
     // Ensure we have enough data
     if (periods.length === 0 || salesValues.length === 0 || fixedAssetsValues.length === 0 || nfatValues.length === 0) {
@@ -102,7 +105,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
     let tableHTML = `<h3>Financial Metrics Table</h3>
     <table border="1">
         <thead>
-            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th><th>NPM%</th></tr>
+            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th><th>NPM%</th><th>3-Year Avg. NPM%</th></tr>
         </thead>
         <tbody>`;
 
@@ -114,6 +117,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
             <td>${!isNaN(nfatValues[i]) ? nfatValues[i].toFixed(2) : "0.00"}</td>
             <td>${avgNfatValues[i]}</td>
             <td>${npmPercentValues[i]}</td>
+            <td>${avgNpm3YValues[i]}</td>
         </tr>`;
     }
 
