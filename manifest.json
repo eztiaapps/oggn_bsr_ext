@@ -1,27 +1,17 @@
 {
-    "manifest_version": 3,
-    "name": "Quarterly Data Analysis",
-    "version": "1.0",
-    "description": "Extracts quarterly financial data and calculates correlation",
-    "permissions": [
-      "activeTab", 
-      "scripting", 
-      "storage"  
-    ],
-    "host_permissions": ["https://www.screener.in/company/*"],
-    "action": {
-      "default_popup": "popup.html"
-    },
-    "content_scripts": [
-      {
-        "matches": ["https://www.screener.in/company/*"],
-        "js": ["content.js"]
-      }
-    ],
-    "web_accessible_resources": [
-      {
-        "resources": ["libs/chart.min.js"],
-        "matches": ["<all_urls>"]
-      }
-    ]
+  "manifest_version": 3,
+  "name": "Datalotus Portfolio Assistant v1.0",
+  "version": "1.0",
+  "description": "Extract financial data from stock market websites",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://www.screener.in/company/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.screener.in/company/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
   }
+}
