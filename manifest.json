@@ -1,17 +1,23 @@
 {
   "manifest_version": 3,
-  "name": "Datalotus Portfolio Assistant v1.0",
+  "name": "Financial Data Extractor",
   "version": "1.0",
-  "description": "Extract financial data from stock market websites",
-  "permissions": ["activeTab", "scripting"],
+  "description": "Extract financial data from webpages",
+  "permissions": ["scripting", "activeTab"],
   "host_permissions": ["https://www.screener.in/company/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
       "matches": ["https://www.screener.in/company/*"],
       "js": ["content.js"]
     }
   ],
-  "action": {
-    "default_popup": "popup.html"
-  }
+  "web_accessible_resources": [
+    {
+      "resources": ["chart.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

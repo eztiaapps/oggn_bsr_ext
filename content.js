@@ -159,25 +159,49 @@ function extractPeriods(section) {
 /**
  * Calculate financial metrics using extracted data
  */
+/**
+ * Calculate financial metrics using extracted data for all periods
+ */
 function calculateFinancialMetrics(data) {
-    const metrics = {};
-    const latestYearIndex = data.periods.length - 2; // Ignore TTM/latest quarter
+    const metrics = {
+        fixedAssetTurnover: [],
+        returnOnFixedAssets: [],
+        depreciationToFixedAssets: [],
+        nfat: []
+    };
 
-    function parseValue(values) {
-        return parseFloat(values?.[latestYearIndex]?.replace(/,/g, "")) || 0;
+    const numPeriods = data.periods.length;
+
+    function parseValue(values, index) {
+        if (!values || values.length <= index || !values[index]) {
+            return 0;
+        }
+        return parseFloat(values[index].replace(/,/g, "")) || 0;
     }
 
-    const sales = parseValue(data.profitLoss.sales?.values);
-    const fixedAssets = parseValue(data.balanceSheet.fixedAssets?.values);
-    const profitForEPS = parseValue(data.profitLoss.profitForEPS?.values);
-    const depreciation = parseValue(data.profitLoss.depreciation?.values);
+    for (let i = 0; i < numPeriods; i++) {
+        const sales = parseValue(data.profitLoss.sales?.values, i);
+        const fixedAssetsCurrent = parseValue(data.balanceSheet.fixedAssets?.values, i);
+        const fixedAssetsPrevious = i > 0 ? parseValue(data.balanceSheet.fixedAssets?.values, i - 1) : 0;
+        const profitForEPS = parseValue(data.profitLoss.profitForEPS?.values, i);
+        const depreciation = parseValue(data.profitLoss.depreciation?.values, i);
 
-    metrics.fixedAssetTurnover = fixedAssets ? sales / fixedAssets : 0;
-    metrics.returnOnFixedAssets = fixedAssets ? (profitForEPS / fixedAssets) * 100 : 0;
-    metrics.depreciationToFixedAssets = fixedAssets ? (depreciation / fixedAssets) * 100 : 0;
+        metrics.fixedAssetTurnover.push(fixedAssetsCurrent ? sales / fixedAssetsCurrent : 0);
+        metrics.returnOnFixedAssets.push(fixedAssetsCurrent ? (profitForEPS / fixedAssetsCurrent) * 100 : 0);
+        metrics.depreciationToFixedAssets.push(fixedAssetsCurrent ? (depreciation / fixedAssetsCurrent) * 100 : 0);
 
+        // NFAT Calculation for each period
+        if (fixedAssetsCurrent > 0 || fixedAssetsPrevious > 0) {
+            metrics.nfat.push((sales * 2) / (fixedAssetsPrevious + fixedAssetsCurrent));
+        } else {
+            metrics.nfat.push(0);
+        }
+    }
+
+    console.log("Calculated metrics:", metrics);
     return metrics;
 }
+
 
 // Listen for messages from popup.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
