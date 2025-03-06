@@ -1,4 +1,4 @@
-console.log("Content script loaded successfully!");
+console.log("✅ Content script loaded successfully!");
 
 // Function to extract financial data
 function extractFinancialData() {
@@ -21,30 +21,33 @@ function extractFinancialData() {
         // Extract periods (years/quarters)
         extractedData.periods = extractPeriods(profitLossSection);
 
-        // Expand "Net Profit" first
+        // Expand "Net Profit" before extracting "Profit for EPS"
         expandNetProfitSection(profitLossSection)
             .then(() => {
-                console.log("Net Profit section expanded successfully");
+                console.log("✅ Net Profit section expanded successfully");
 
-                // Wait until "Profit for EPS" actually appears in the DOM
+                // Wait until "Profit for EPS" appears in the DOM
                 return waitForElement(profitLossSection, "Profit for EPS", 5000);
             })
             .then(() => {
-                console.log("Extracting Profit for EPS...");
+                console.log("✅ Extracting Profit for EPS...");
                 extractedData.profitLoss.profitForEPS = extractRowData(profitLossSection, "Profit for EPS");
 
-                // Send extracted data
+                // Calculate metrics
                 const calculatedMetrics = calculateFinancialMetrics(extractedData);
+                
+                // Send extracted data to popup
                 chrome.runtime.sendMessage({
                     action: "dataExtracted",
                     data: { extractedData, calculatedMetrics }
                 });
 
-                console.log("Data extraction complete", extractedData, calculatedMetrics);
+                console.log("✅ Data extraction complete:", extractedData, calculatedMetrics);
             })
             .catch(error => {
-                console.error("Error extracting full data:", error);
-                // Send partial data
+                console.error("❌ Error extracting full data:", error);
+
+                // Send partial data if extraction fails
                 const calculatedMetrics = calculateFinancialMetrics(extractedData);
                 chrome.runtime.sendMessage({
                     action: "dataExtracted",
@@ -52,63 +55,56 @@ function extractFinancialData() {
                     status: "partial"
                 });
 
-                console.log("Partial data extraction complete", extractedData, calculatedMetrics);
+                console.log("⚠️ Partial data extraction complete:", extractedData, calculatedMetrics);
             });
     } else {
-        console.error("Could not find profit-loss section.");
+        console.error("❌ Could not find profit-loss section.");
     }
 }
 
 /**
- * Function to expand the "Net Profit" section reliably
+ * Expands the "Net Profit" section before extracting "Profit for EPS"
  */
 function expandNetProfitSection(profitLossSection) {
     return new Promise((resolve, reject) => {
-        // Find the row containing "Net Profit"
         const netProfitRow = Array.from(profitLossSection.querySelectorAll("tr"))
             .find(row => row.textContent.includes("Net Profit"));
 
         if (!netProfitRow) {
-            console.warn("Could not find 'Net Profit' row.");
+            console.warn("⚠️ Could not find 'Net Profit' row.");
             reject("Net Profit row not found");
             return;
         }
 
-        // Find the correct expand button inside the row
         const netProfitButton = netProfitRow.querySelector("button.button-plain");
 
         if (!netProfitButton) {
-            console.warn("Could not find expand button for 'Net Profit'.");
+            console.warn("⚠️ Could not find expand button for 'Net Profit'.");
             reject("Net Profit button not found");
             return;
         }
 
-        // Click the button to expand
-        console.log("Clicking 'Net Profit' button to expand...");
+        console.log("🔄 Clicking 'Net Profit' button to expand...");
         netProfitButton.click();
 
-        // Poll every 500ms until "Profit for EPS" appears (max wait: 5 seconds)
         waitForElement(profitLossSection, "Profit for EPS", 5000)
             .then(() => {
-                console.log("'Profit for EPS' is now visible.");
+                console.log("✅ 'Profit for EPS' is now visible.");
                 resolve();
             })
             .catch(() => {
-                console.warn("Failed to expand 'Net Profit' fully.");
+                console.warn("⚠️ Failed to expand 'Net Profit' fully.");
                 reject("Expansion failed");
             });
     });
 }
 
 /**
- * Wait for an element containing a specific keyword to appear within a section.
- * @param {Element} section - The parent section to search in.
- * @param {string} keyword - The text to search for in table rows.
- * @param {number} timeout - Maximum wait time in milliseconds.
+ * Waits for an element containing a specific keyword to appear within a section.
  */
 function waitForElement(section, keyword, timeout = 5000) {
     return new Promise((resolve, reject) => {
-        const interval = 500; // Check every 500ms
+        const interval = 500;
         let elapsedTime = 0;
 
         const checkElement = () => {
@@ -121,7 +117,7 @@ function waitForElement(section, keyword, timeout = 5000) {
             }
 
             if (elapsedTime >= timeout) {
-                reject(`Timeout waiting for '${keyword}'`);
+                reject(`❌ Timeout waiting for '${keyword}'`);
                 return;
             }
 
@@ -147,7 +143,7 @@ function extractRowData(section, keyword) {
 }
 
 /**
- * Extract periods (years/quarters) from table headers
+ * Extracts periods (years/quarters) from table headers
  */
 function extractPeriods(section) {
     const headerRow = section?.querySelector("thead tr");
@@ -157,58 +153,62 @@ function extractPeriods(section) {
 }
 
 /**
- * Calculate financial metrics using extracted data
- */
-/**
- * Calculate financial metrics using extracted data for all periods
+ * Calculates financial metrics
  */
 function calculateFinancialMetrics(data) {
-    const metrics = {
-        fixedAssetTurnover: [],
-        returnOnFixedAssets: [],
-        depreciationToFixedAssets: [],
-        nfat: []
-    };
+    const metrics = {};
+    const periods = data.periods || [];
+    const numPeriods = periods.length;
 
-    const numPeriods = data.periods.length;
-
-    function parseValue(values, index) {
-        if (!values || values.length <= index || !values[index]) {
+    function parseValue(valueObject, index) {
+        if (!valueObject || !valueObject.values || valueObject.values.length <= index) {
             return 0;
         }
-        return parseFloat(values[index].replace(/,/g, "")) || 0;
+        const valueStr = valueObject.values[index];
+        return valueStr ? parseFloat(valueStr.replace(/,/g, "")) || 0 : 0;
     }
 
+    const sales = data.profitLoss.sales;
+    const fixedAssets = data.balanceSheet.fixedAssets;
+
+    let nfat = [];
+    let avgNfat3Y = [];
+
     for (let i = 0; i < numPeriods; i++) {
-        const sales = parseValue(data.profitLoss.sales?.values, i);
-        const fixedAssetsCurrent = parseValue(data.balanceSheet.fixedAssets?.values, i);
-        const fixedAssetsPrevious = i > 0 ? parseValue(data.balanceSheet.fixedAssets?.values, i - 1) : 0;
-        const profitForEPS = parseValue(data.profitLoss.profitForEPS?.values, i);
-        const depreciation = parseValue(data.profitLoss.depreciation?.values, i);
+        const currentSales = parseValue(sales, i);
+        const currentFixedAssets = parseValue(fixedAssets, i);
+        const previousFixedAssets = i > 0 ? parseValue(fixedAssets, i - 1) : 0;
 
-        metrics.fixedAssetTurnover.push(fixedAssetsCurrent ? sales / fixedAssetsCurrent : 0);
-        metrics.returnOnFixedAssets.push(fixedAssetsCurrent ? (profitForEPS / fixedAssetsCurrent) * 100 : 0);
-        metrics.depreciationToFixedAssets.push(fixedAssetsCurrent ? (depreciation / fixedAssetsCurrent) * 100 : 0);
+        // NFAT Calculation
+        let nfatValue = (previousFixedAssets + currentFixedAssets) > 0
+            ? (currentSales * 2) / (previousFixedAssets + currentFixedAssets)
+            : 0;
+        nfat.push(nfatValue);
 
-        // NFAT Calculation for each period
-        if (fixedAssetsCurrent > 0 || fixedAssetsPrevious > 0) {
-            metrics.nfat.push((sales * 2) / (fixedAssetsPrevious + fixedAssetsCurrent));
+        // 3-Year Avg NFAT Calculation
+        if (i < 3) {
+            avgNfat3Y.push(0); // First three years won't have 3-year average
         } else {
-            metrics.nfat.push(0);
+            let avgValue = (nfat[i - 2] + nfat[i - 1] + nfat[i]) / 3;
+            avgNfat3Y.push(avgValue);
         }
     }
 
-    console.log("Calculated metrics:", metrics);
+    console.log("✅ NFAT:", nfat);
+    console.log("✅ 3-Year Avg. NFAT:", avgNfat3Y);
+
+    metrics.nfat = nfat;
+    metrics.avgNfat3Y = avgNfat3Y;
+    
     return metrics;
 }
-
 
 // Listen for messages from popup.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "extractData") {
-        console.log("Extracting financial data...");
+        console.log("🔄 Extracting financial data...");
         extractFinancialData();
         sendResponse({ status: "extracting" });
-        return true; // Keep the message channel open for async response
+        return true;
     }
 });
