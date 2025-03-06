@@ -170,14 +170,17 @@ function calculateFinancialMetrics(data) {
 
     const sales = data.profitLoss.sales;
     const fixedAssets = data.balanceSheet.fixedAssets;
+    const profitForEPS = data.profitLoss.profitForEPS;
 
     let nfat = [];
     let avgNfat3Y = [];
+    let npmPercent = [];
 
     for (let i = 0; i < numPeriods; i++) {
         const currentSales = parseValue(sales, i);
         const currentFixedAssets = parseValue(fixedAssets, i);
         const previousFixedAssets = i > 0 ? parseValue(fixedAssets, i - 1) : 0;
+        const currentProfitForEPS = parseValue(profitForEPS, i);
 
         // NFAT Calculation
         let nfatValue = (previousFixedAssets + currentFixedAssets) > 0
@@ -187,18 +190,24 @@ function calculateFinancialMetrics(data) {
 
         // 3-Year Avg NFAT Calculation
         if (i < 3) {
-            avgNfat3Y.push(0); // First three years won't have 3-year average
+            avgNfat3Y.push(0);
         } else {
             let avgValue = (nfat[i - 2] + nfat[i - 1] + nfat[i]) / 3;
             avgNfat3Y.push(avgValue);
         }
+
+        // NPM% Calculation
+        let npmValue = currentSales > 0 ? (currentProfitForEPS / currentSales) * 100 : 0;
+        npmPercent.push(npmValue);
     }
 
     console.log("✅ NFAT:", nfat);
     console.log("✅ 3-Year Avg. NFAT:", avgNfat3Y);
+    console.log("✅ NPM%:", npmPercent);
 
     metrics.nfat = nfat;
     metrics.avgNfat3Y = avgNfat3Y;
+    metrics.npmPercent = npmPercent;
     
     return metrics;
 }

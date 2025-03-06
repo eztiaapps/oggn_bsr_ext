@@ -82,13 +82,14 @@ document.getElementById("plotTable").addEventListener("click", function () {
     const fixedAssetsValues = extractedData.extractedData.balanceSheet.fixedAssets?.values || [];
     const nfatValues = extractedData.calculatedMetrics.nfat || [];
     let avgNfatValues = extractedData.calculatedMetrics.avgNfat3Y || [];
+    let npmPercentValues = extractedData.calculatedMetrics.npmPercent || [];
 
-    // 🛠 Fix avgNfatValues (replace empty values with 0.00)
-    avgNfatValues = avgNfatValues.map((val, index) => {
-        return (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2);
-    });
+    // 🛠 Fix empty values for display
+    avgNfatValues = avgNfatValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+    npmPercentValues = npmPercentValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
 
     console.log("✅ Cleaned 3-Year Avg. NFAT for Display:", avgNfatValues);
+    console.log("✅ Cleaned NPM% for Display:", npmPercentValues);
 
     // Ensure we have enough data
     if (periods.length === 0 || salesValues.length === 0 || fixedAssetsValues.length === 0 || nfatValues.length === 0) {
@@ -98,10 +99,10 @@ document.getElementById("plotTable").addEventListener("click", function () {
         return;
     }
 
-    let tableHTML = `<h3>NFAT Table</h3>
+    let tableHTML = `<h3>Financial Metrics Table</h3>
     <table border="1">
         <thead>
-            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th></tr>
+            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th><th>NPM%</th></tr>
         </thead>
         <tbody>`;
 
@@ -112,6 +113,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
             <td>${fixedAssetsValues[i] || "-"}</td>
             <td>${!isNaN(nfatValues[i]) ? nfatValues[i].toFixed(2) : "0.00"}</td>
             <td>${avgNfatValues[i]}</td>
+            <td>${npmPercentValues[i]}</td>
         </tr>`;
     }
 
