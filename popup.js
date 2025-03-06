@@ -2,7 +2,7 @@ let extractedData = null; // Store extracted data globally
 
 document.getElementById("fetchData").addEventListener("click", function () {
     document.getElementById("data-container").innerHTML = "<p>Fetching data...</p>";
-    document.getElementById("plotTable").disabled = true; // Disable button until extraction completes
+    document.getElementById("plotTable").disabled = true; // Disable "Show Table" button until data is ready
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.scripting.executeScript({
@@ -10,12 +10,12 @@ document.getElementById("fetchData").addEventListener("click", function () {
             files: ["content.js"] // Ensure content.js is injected
         }, () => {
             if (chrome.runtime.lastError) {
-                console.error("Script injection error:", chrome.runtime.lastError);
+                console.error("❌ Script injection error:", chrome.runtime.lastError);
                 document.getElementById("data-container").innerHTML = "<p>Error injecting script.</p>";
                 return;
             }
 
-            // Wait a second and request data extraction
+            // Wait before requesting data extraction
             setTimeout(() => {
                 chrome.tabs.sendMessage(tabs[0].id, { action: "extractData" });
             }, 1000);
@@ -31,10 +31,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log("✅ Extracted Data:", message.data.extractedData);
         console.log("✅ Calculated Metrics:", message.data.calculatedMetrics);
 
-        extractedData = message.data; // Store data globally for later use
+        extractedData = message.data; // Store data globally
         displayData(extractedData.extractedData, extractedData.calculatedMetrics);
 
-        // Enable "Show Table" button only if data is valid
+        // Enable "Show Table" button
         document.getElementById("plotTable").disabled = false;
     } else {
         console.warn("⚠️ Unexpected message format:", message);
@@ -60,11 +60,10 @@ function displayData(extractedData, calculatedMetrics) {
         content += `<p><strong>${extractedData.balanceSheet[key].label}:</strong> ${extractedData.balanceSheet[key].values.join(', ')}</p>`;
     });
 
-    // Validate and Display Calculated Metrics
-    const safeNumber = (num) => (isNaN(num) || num === undefined) ? "N/A" : num.toFixed(2);
+    // Ensure all calculated metrics are safe numbers
+    const safeNumber = (num) => (isNaN(num) || num === undefined) ? "0.00" : num.toFixed(2);
 
     content += `<h3>Calculated Metrics</h3>`;
-    content += `<p><strong>Fixed Asset Turnover:</strong> ${safeNumber(calculatedMetrics.fixedAssetTurnover)}</p>`;
     content += `<p><strong>Return on Fixed Assets:</strong> ${safeNumber(calculatedMetrics.returnOnFixedAssets)}%</p>`;
     content += `<p><strong>Depreciation to Fixed Assets:</strong> ${safeNumber(calculatedMetrics.depreciationToFixedAssets)}%</p>`;
 
@@ -82,8 +81,16 @@ document.getElementById("plotTable").addEventListener("click", function () {
     const salesValues = extractedData.extractedData.profitLoss.sales?.values || [];
     const fixedAssetsValues = extractedData.extractedData.balanceSheet.fixedAssets?.values || [];
     const nfatValues = extractedData.calculatedMetrics.nfat || [];
+    let avgNfatValues = extractedData.calculatedMetrics.avgNfat3Y || [];
 
-    // Ensure we have data
+    // 🛠 Fix avgNfatValues (replace empty values with 0.00)
+    avgNfatValues = avgNfatValues.map((val, index) => {
+        return (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2);
+    });
+
+    console.log("✅ Cleaned 3-Year Avg. NFAT for Display:", avgNfatValues);
+
+    // Ensure we have enough data
     if (periods.length === 0 || salesValues.length === 0 || fixedAssetsValues.length === 0 || nfatValues.length === 0) {
         console.warn("⚠️ Not enough data to plot the table.");
         document.getElementById("table-container").innerHTML = "<p>No data available.</p>";
@@ -91,14 +98,20 @@ document.getElementById("plotTable").addEventListener("click", function () {
         return;
     }
 
-    let tableHTML = `<h3>NFAT Table</h3><table><thead><tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th></tr></thead><tbody>`;
+    let tableHTML = `<h3>NFAT Table</h3>
+    <table border="1">
+        <thead>
+            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th></tr>
+        </thead>
+        <tbody>`;
 
     for (let i = 0; i < periods.length; i++) {
         tableHTML += `<tr>
             <td>${periods[i]}</td>
             <td>${salesValues[i] || "-"}</td>
             <td>${fixedAssetsValues[i] || "-"}</td>
-            <td>${!isNaN(nfatValues[i]) ? nfatValues[i].toFixed(2) : "-"}</td>
+            <td>${!isNaN(nfatValues[i]) ? nfatValues[i].toFixed(2) : "0.00"}</td>
+            <td>${avgNfatValues[i]}</td>
         </tr>`;
     }
 
