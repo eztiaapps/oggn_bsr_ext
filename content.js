@@ -11,6 +11,8 @@ function extractFinancialData() {
         extractedData.profitLoss.eps = extractRowData(profitLossSection, "EPS in Rs");
         extractedData.profitLoss.dividendPayout = extractRowData(profitLossSection, "Dividend Payout %");
         extractedData.profitLoss.depreciation = extractRowData(profitLossSection, "Depreciation");
+        extractedData.profitLoss.dividendPayout = extractRowData(profitLossSection, "Dividend Payout %");
+
 
         // Extract Balance Sheet data
         const balanceSheetSection = document.querySelector("#balance-sheet");
@@ -171,11 +173,13 @@ function calculateFinancialMetrics(data) {
     const sales = data.profitLoss.sales;
     const fixedAssets = data.balanceSheet.fixedAssets;
     const profitForEPS = data.profitLoss.profitForEPS;
+    const dividendPayout = data.profitLoss.dividendPayout;
 
     let nfat = [];
     let avgNfat3Y = [];
     let npmPercent = [];
     let avgNpm3Y = [];
+    let dividendPayoutValues = [];
 
 
     for (let i = 0; i < numPeriods; i++) {
@@ -183,6 +187,7 @@ function calculateFinancialMetrics(data) {
         const currentFixedAssets = parseValue(fixedAssets, i);
         const previousFixedAssets = i > 0 ? parseValue(fixedAssets, i - 1) : 0;
         const currentProfitForEPS = parseValue(profitForEPS, i);
+        const currentDividendPayout = parseValue(dividendPayout, i);
 
         // NFAT Calculation
         let nfatValue = (previousFixedAssets + currentFixedAssets) > 0
@@ -209,16 +214,21 @@ function calculateFinancialMetrics(data) {
             let avgValue = (npmPercent[i - 2] + npmPercent[i - 1] + npmPercent[i]) / 3;
             avgNpm3Y.push(avgValue);
         }
+
+        // Dividend Payout %
+        dividendPayoutValues.push(currentDividendPayout);
     }
 
     console.log("✅ NFAT:", nfat);
     console.log("✅ 3-Year Avg. NFAT:", avgNfat3Y);
     console.log("✅ NPM%:", npmPercent);
+    console.log("✅ DPR%:", npmPercent);
 
     metrics.nfat = nfat;
     metrics.avgNfat3Y = avgNfat3Y;
     metrics.npmPercent = npmPercent;
     metrics.avgNpm3Y = avgNpm3Y;
+    metrics.dividendPayout = dividendPayoutValues;
 
     
     return metrics;
