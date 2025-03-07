@@ -26,13 +26,13 @@ function extractFinancialData() {
         // Expand "Net Profit" before extracting "Profit for EPS"
         expandNetProfitSection(profitLossSection)
             .then(() => {
-                console.log("✅ Net Profit section expanded successfully");
+                //console.log("✅ Net Profit section expanded successfully");
 
                 // Wait until "Profit for EPS" appears in the DOM
                 return waitForElement(profitLossSection, "Profit for EPS", 5000);
             })
             .then(() => {
-                console.log("✅ Extracting Profit for EPS...");
+                //console.log("✅ Extracting Profit for EPS...");
                 extractedData.profitLoss.profitForEPS = extractRowData(profitLossSection, "Profit for EPS");
 
                 // Calculate metrics
@@ -44,10 +44,10 @@ function extractFinancialData() {
                     data: { extractedData, calculatedMetrics }
                 });
 
-                console.log("✅ Data extraction complete:", extractedData, calculatedMetrics);
+                //console.log("✅ Data extraction complete:", extractedData, calculatedMetrics);
             })
             .catch(error => {
-                console.error("❌ Error extracting full data:", error);
+                //console.error("❌ Error extracting full data:", error);
 
                 // Send partial data if extraction fails
                 const calculatedMetrics = calculateFinancialMetrics(extractedData);
@@ -57,10 +57,10 @@ function extractFinancialData() {
                     status: "partial"
                 });
 
-                console.log("⚠️ Partial data extraction complete:", extractedData, calculatedMetrics);
+                //console.log("⚠️ Partial data extraction complete:", extractedData, calculatedMetrics);
             });
     } else {
-        console.error("❌ Could not find profit-loss section.");
+        //console.error("❌ Could not find profit-loss section.");
     }
 }
 
@@ -73,7 +73,7 @@ function expandNetProfitSection(profitLossSection) {
             .find(row => row.textContent.includes("Net Profit"));
 
         if (!netProfitRow) {
-            console.warn("⚠️ Could not find 'Net Profit' row.");
+            //console.warn("⚠️ Could not find 'Net Profit' row.");
             reject("Net Profit row not found");
             return;
         }
@@ -81,21 +81,21 @@ function expandNetProfitSection(profitLossSection) {
         const netProfitButton = netProfitRow.querySelector("button.button-plain");
 
         if (!netProfitButton) {
-            console.warn("⚠️ Could not find expand button for 'Net Profit'.");
+            //console.warn("⚠️ Could not find expand button for 'Net Profit'.");
             reject("Net Profit button not found");
             return;
         }
 
-        console.log("🔄 Clicking 'Net Profit' button to expand...");
+        //console.log("🔄 Clicking 'Net Profit' button to expand...");
         netProfitButton.click();
 
         waitForElement(profitLossSection, "Profit for EPS", 5000)
             .then(() => {
-                console.log("✅ 'Profit for EPS' is now visible.");
+                //console.log("✅ 'Profit for EPS' is now visible.");
                 resolve();
             })
             .catch(() => {
-                console.warn("⚠️ Failed to expand 'Net Profit' fully.");
+                //console.warn("⚠️ Failed to expand 'Net Profit' fully.");
                 reject("Expansion failed");
             });
     });
@@ -240,30 +240,34 @@ function calculateFinancialMetrics(data) {
             avgDividendPayout3Y.push(avgValue);
         }
 
-        depreciationValues.push(currentDepreciation);
-
-        // Depreciation % Calculation
-        let depPercent = currentFixedAssets > 0 ? (currentDepreciation / currentFixedAssets) : 0;
-        depreciationPercent.push(depPercent);
-
-        // 3-Year Avg Depreciation % Calculation
-        if (i < 3) {
-            avgDepreciationPercent3Y.push(0);
-        } else {
-            let avgValue = (depreciationPercent[i - 2] + depreciationPercent[i - 1] + depreciationPercent[i]) / 3;
+        // 3-Year Avg. Depreciation %
+        for (let i = 0; i < numPeriods; i++) {
+            const currentFixedAssets = parseValue(fixedAssets, i);
+            const currentDepreciation = parseValue(depreciation, i);
+    
+            // Depreciation % Calculation
+            let depPercent = currentFixedAssets > 0 ? (currentDepreciation / currentFixedAssets) : 0;
+            depreciationPercent.push(depPercent);
+    
+            // 3-Year Avg Depreciation % Calculation
+            let validValues = depreciationPercent.slice(0, i + 1).filter(v => !isNaN(v));
+            let avgValue = validValues.length >= 3
+                ? (depreciationPercent[i - 2] + depreciationPercent[i - 1] + depreciationPercent[i]) / 3
+                : validValues.length > 0 ? validValues.reduce((sum, v) => sum + v, 0) / validValues.length : 0;
             avgDepreciationPercent3Y.push(avgValue);
         }
+    
     }
 
 
-    console.log("✅ NFAT:", nfat);
-    console.log("✅ 3-Year Avg. NFAT:", avgNfat3Y);
-    console.log("✅ NPM%:", npmPercent);
-    console.log("✅ DPR%:", npmPercent);
-    console.log("✅ 3-Year Avg. Dividend Payout %:", avgDividendPayout3Y);
-    console.log("✅ Depreciation Values:", depreciationValues);
-    console.log("✅ Depreciation %:", depreciationPercent);
-    console.log("✅ 3-Year Avg. Depreciation %:", avgDepreciationPercent3Y);
+    //console.log("✅ NFAT:", nfat);
+    //console.log("✅ 3-Year Avg. NFAT:", avgNfat3Y);
+    //console.log("✅ NPM%:", npmPercent);
+    //console.log("✅ DPR%:", npmPercent);
+    //console.log("✅ 3-Year Avg. Dividend Payout %:", avgDividendPayout3Y);
+    //console.log("✅ Depreciation Values:", depreciationValues);
+    //console.log("✅ Depreciation %:", depreciationPercent);
+    //console.log("✅ 3-Year Avg. Depreciation %:", avgDepreciationPercent3Y);
 
 
     metrics.nfat = nfat;
@@ -282,7 +286,7 @@ function calculateFinancialMetrics(data) {
 // Listen for messages from popup.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "extractData") {
-        console.log("🔄 Extracting financial data...");
+        //console.log("🔄 Extracting financial data...");
         extractFinancialData();
         sendResponse({ status: "extracting" });
         return true;
