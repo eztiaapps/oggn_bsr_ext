@@ -92,6 +92,14 @@ document.getElementById("plotTable").addEventListener("click", function () {
     let avgNpm3YValues = extractedData.calculatedMetrics.avgNpm3Y || [];
     let dividendPayoutValues = extractedData.extractedData.profitLoss.dividendPayout?.values || [];
     let avgDividendPayout3Y = extractedData.calculatedMetrics.avgDividendPayout3Y || [];
+    let depreciationValues = extractedData.extractedData.profitLoss.depreciation?.values || [];
+    let depreciationPercentValues = extractedData.calculatedMetrics.depreciationPercent || [];
+    let depreciationPercent = extractedData.calculatedMetrics.depreciationPercent || [];
+    let avgDepreciationPercent3Y = extractedData.calculatedMetrics.avgDepreciationPercent3Y || [];
+
+
+
+
 
 
     // 🛠 Fix empty values for display
@@ -102,7 +110,13 @@ document.getElementById("plotTable").addEventListener("click", function () {
         let num = parseFloat(val); // Convert to number
         return isNaN(num) ? "0.00" : num.toFixed(2);
     });
-    avgDividendPayout3Y = avgDividendPayout3Y.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+    avgDividendPayout3Y = avgDividendPayout3Y.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));    
+    depreciationPercentValues = depreciationPercentValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+    depreciationPercent = depreciationPercent.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+    avgDepreciationPercent3Y = avgDepreciationPercent3Y.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+
+
+
 
     
 
@@ -123,7 +137,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
     let tableHTML = `<h3>Financial Metrics Table</h3>
     <table border="1">
         <thead>
-            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th><th>NPM%</th><th>3-Year Avg. NPM%</th><th>Dividend Payout %</th><th>3-Year Avg. Dividend Payout %</th></tr>
+            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th><th>NPM%</th><th>3-Year Avg. NPM%</th><th>Dividend Payout %</th><th>3-Year Avg. Dividend Payout %</th><th>Depreciation</th><th>Dep %</th><th>3-Year Avg. Depreciation</th></tr>
         </thead>
         <tbody>`;
 
@@ -138,6 +152,9 @@ document.getElementById("plotTable").addEventListener("click", function () {
             <td>${avgNpm3YValues[i]}</td>
             <td>${dividendPayoutValues[i] || "-"}</td>
             <td>${avgDividendPayout3Y[i]}</td>
+            <td>${depreciationValues[i] || "-"}</td>
+            <td>${depreciationPercent[i] || "0.00"}</td>
+            <td>${avgDepreciationPercent3Y[i]}</td>
         </tr>`;
     }
 

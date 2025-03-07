@@ -174,6 +174,8 @@
         const fixedAssets = data.balanceSheet.fixedAssets;
         const profitForEPS = data.profitLoss.profitForEPS;
         const dividendPayout = data.profitLoss.dividendPayout;
+        const depreciation = data.profitLoss.depreciation;
+    
 
         let nfat = [];
         let avgNfat3Y = [];
@@ -181,6 +183,11 @@
         let avgNpm3Y = [];
         let dividendPayoutValues = [];
         let avgDividendPayout3Y = [];
+        let depreciationValues = [];
+        let depreciationPercent = [];
+        let avgDepreciation3Y = [];
+        let avgDepreciationPercent3Y = [];
+        
 
 
 
@@ -190,6 +197,8 @@
             const previousFixedAssets = i > 0 ? parseValue(fixedAssets, i - 1) : 0;
             const currentProfitForEPS = parseValue(profitForEPS, i);
             const currentDividendPayout = parseValue(dividendPayout, i);
+            const currentDepreciation = parseValue(depreciation, i);
+        
 
             // NFAT Calculation
             let nfatValue = (previousFixedAssets + currentFixedAssets) > 0
@@ -206,7 +215,7 @@
             }
 
             // NPM% Calculation
-            let npmValue = currentSales > 0 ? (currentProfitForEPS / currentSales) * 100 : 0;
+            let npmValue = currentSales > 0 ? (currentProfitForEPS / currentSales) : 0;
             npmPercent.push(npmValue);
 
             // 3-Year Avg. NPM% Calculation
@@ -230,6 +239,20 @@
                 let avgValue = (dividendPayoutValues[i - 2] + dividendPayoutValues[i - 1] + dividendPayoutValues[i]) / 3;
                 avgDividendPayout3Y.push(avgValue);
             }
+
+            depreciationValues.push(currentDepreciation);
+
+            // Depreciation % Calculation
+            let depPercent = currentFixedAssets > 0 ? (currentDepreciation / currentFixedAssets) : 0;
+            depreciationPercent.push(depPercent);
+
+            // 3-Year Avg Depreciation % Calculation
+            if (i < 3) {
+                avgDepreciationPercent3Y.push(0);
+            } else {
+                let avgValue = (depreciationPercent[i - 2] + depreciationPercent[i - 1] + depreciationPercent[i]) / 3;
+                avgDepreciationPercent3Y.push(avgValue);
+            }
         }
 
 
@@ -238,6 +261,10 @@
         console.log("✅ NPM%:", npmPercent);
         console.log("✅ DPR%:", npmPercent);
         console.log("✅ 3-Year Avg. Dividend Payout %:", avgDividendPayout3Y);
+        console.log("✅ Depreciation Values:", depreciationValues);
+        console.log("✅ Depreciation %:", depreciationPercent);
+        console.log("✅ 3-Year Avg. Depreciation %:", avgDepreciationPercent3Y);
+
 
         metrics.nfat = nfat;
         metrics.avgNfat3Y = avgNfat3Y;
@@ -245,7 +272,9 @@
         metrics.avgNpm3Y = avgNpm3Y;
         metrics.dividendPayout = dividendPayoutValues;
         metrics.avgDividendPayout3Y = avgDividendPayout3Y;
-
+        metrics.depreciationValues = depreciationValues;
+        metrics.depreciationPercent = depreciationPercent;
+        metrics.avgDepreciationPercent3Y = avgDepreciationPercent3Y;
         
         return metrics;
     }
