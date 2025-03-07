@@ -72,6 +72,7 @@ function displayData(extractedData, calculatedMetrics) {
     content += `<h3>Calculated Metrics</h3>`;
     content += `<p><strong>Return on Fixed Assets:</strong> ${safeNumber(calculatedMetrics.returnOnFixedAssets)}%</p>`;
     content += `<p><strong>Depreciation to Fixed Assets:</strong> ${safeNumber(calculatedMetrics.depreciationToFixedAssets)}%</p>`;
+    content += `<p><strong>BSR:</strong> ${safeNumber(calculatedMetrics.bsr)}</p>`;
 
     document.getElementById("data-container").innerHTML = content;
 }
@@ -91,14 +92,18 @@ document.getElementById("plotTable").addEventListener("click", function () {
     let npmPercentValues = extractedData.calculatedMetrics.npmPercent || [];
     let avgNpm3YValues = extractedData.calculatedMetrics.avgNpm3Y || [];
     let dividendPayoutValues = extractedData.extractedData.profitLoss.dividendPayout?.values || [];
-    let avgDividendPayout3Y = extractedData.calculatedMetrics.avgDividendPayout3Y || [];
+    let avgDividendPayout3Y = extractedData.calculatedMetrics.avgDividendPayout3Y.map(val => val / 100) || [];
     let depreciationValues = extractedData.extractedData.profitLoss.depreciation?.values || [];
     let depreciationPercentValues = extractedData.calculatedMetrics.depreciationPercent || [];
     let depreciationPercent = extractedData.calculatedMetrics.depreciationPercent || [];
     let avgDepreciationPercent3Y = extractedData.calculatedMetrics.avgDepreciationPercent3Y || [];
+    let bsrValues = extractedData.calculatedMetrics.bsr || [];
 
 
-
+    // Ensure BSR calculation is correct
+    bsrValues = avgNfatValues.map((val, i) =>
+        (val * avgNpm3YValues[i] * (1 - avgDividendPayout3Y[i]) - avgDepreciationPercent3Y[i]) * 100
+    );
 
 
 
@@ -114,6 +119,8 @@ document.getElementById("plotTable").addEventListener("click", function () {
     depreciationPercentValues = depreciationPercentValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
     depreciationPercent = depreciationPercent.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
     avgDepreciationPercent3Y = avgDepreciationPercent3Y.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+    bsrValues = bsrValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+
 
 
 
@@ -137,7 +144,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
     let tableHTML = `<h3>Financial Metrics Table</h3>
     <table border="1">
         <thead>
-            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th><th>NPM%</th><th>3-Year Avg. NPM%</th><th>Dividend Payout %</th><th>3-Year Avg. Dividend Payout %</th><th>Depreciation</th><th>Dep %</th><th>3-Year Avg. Depreciation</th></tr>
+            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th><th>NPM%</th><th>3-Year Avg. NPM%</th><th>Dividend Payout %</th><th>3-Year Avg. Dividend Payout %</th><th>Depreciation</th><th>Dep %</th><th>3-Year Avg. Depreciation</th><th>BSR</th></tr>
         </thead>
         <tbody>`;
 
@@ -155,6 +162,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
             <td>${depreciationValues[i] || "-"}</td>
             <td>${depreciationPercent[i] || "0.00"}</td>
             <td>${avgDepreciationPercent3Y[i]}</td>
+            <td>${bsrValues[i]}</td>
         </tr>`;
     }
 
