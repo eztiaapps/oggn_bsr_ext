@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Financial Data Extractor",
+  "name": "Datalotus Portfolio Assistant 1.0",
   "version": "1.0",
   "description": "Extract financial data from webpages",
   "permissions": ["scripting", "activeTab"],
