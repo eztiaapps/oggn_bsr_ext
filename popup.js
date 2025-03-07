@@ -1,8 +1,10 @@
 let extractedData = null; // Store extracted data globally
 
 document.getElementById("fetchData").addEventListener("click", function () {
+    const spinner = document.getElementById("spinner");
     document.getElementById("data-container").innerHTML = "<p>Fetching data...</p>";
     document.getElementById("plotTable").disabled = true; // Disable "Show Table" button until data is ready
+    spinner.style.display = "block"; // Show spinner
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.scripting.executeScript({
@@ -12,12 +14,16 @@ document.getElementById("fetchData").addEventListener("click", function () {
             if (chrome.runtime.lastError) {
                 console.error("❌ Script injection error:", chrome.runtime.lastError);
                 document.getElementById("data-container").innerHTML = "<p>Error injecting script.</p>";
+                spinner.style.display = "none"; // Hide spinner on error
                 return;
             }
 
             // Wait before requesting data extraction
             setTimeout(() => {
                 chrome.tabs.sendMessage(tabs[0].id, { action: "extractData" });
+                setTimeout(() => {
+                    spinner.style.display = "none"; // Hide spinner after 2 seconds
+                }, 2000);
             }, 1000);
         });
     });
