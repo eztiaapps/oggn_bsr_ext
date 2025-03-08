@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Datalotus Portfolio Assistant 1.0",
+  "name": "Datalotus Portfolio Assistant",
   "version": "1.0",
-  "description": "Extract financial data from webpages",
+  "description": "Analyze the stock before investing...",
   "permissions": ["scripting", "activeTab"],
   "host_permissions": ["https://www.screener.in/company/*"],
   "action": {
