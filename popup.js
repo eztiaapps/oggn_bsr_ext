@@ -38,7 +38,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log("✅ Calculated Metrics:", message.data.calculatedMetrics);
 
         extractedData = message.data; // Store data globally
-        displayData(extractedData.extractedData, extractedData.calculatedMetrics);
+        
+        // Simply show a success message instead of displaying extracted data
+        document.getElementById("data-container").innerHTML = "<p>Data successfully extracted! Click 'Show Table' to view the analysis.</p>";
 
         // Enable "Show Table" button
         document.getElementById("plotTable").disabled = false;
@@ -49,32 +51,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 /**
- * Display extracted financial data in popup
+ * Calculate compound annual growth rate (CAGR)
+ * @param {number} startValue - The initial value
+ * @param {number} endValue - The final value
+ * @param {number} years - Number of years between start and end
+ * @returns {number} CAGR as a percentage
  */
-function displayData(extractedData, calculatedMetrics) {
-    let content = `<h3>Extracted Financial Data</h3>`;
-
-    // Profit & Loss Section
-    content += `<h4>Profit & Loss</h4>`;
-    Object.keys(extractedData.profitLoss).forEach(key => {
-        content += `<p><strong>${extractedData.profitLoss[key].label}:</strong> ${extractedData.profitLoss[key].values.join(', ')}</p>`;
-    });
-
-    // Balance Sheet Section
-    content += `<h4>Balance Sheet</h4>`;
-    Object.keys(extractedData.balanceSheet).forEach(key => {
-        content += `<p><strong>${extractedData.balanceSheet[key].label}:</strong> ${extractedData.balanceSheet[key].values.join(', ')}</p>`;
-    });
-
-    // Ensure all calculated metrics are safe numbers
-    const safeNumber = (num) => (isNaN(num) || num === undefined) ? "0.00" : num.toFixed(2);
-
-    content += `<h3>Calculated Metrics</h3>`;
-    content += `<p><strong>Return on Fixed Assets:</strong> ${safeNumber(calculatedMetrics.returnOnFixedAssets)}%</p>`;
-    content += `<p><strong>Depreciation to Fixed Assets:</strong> ${safeNumber(calculatedMetrics.depreciationToFixedAssets)}%</p>`;
-    content += `<p><strong>BSR:</strong> ${safeNumber(calculatedMetrics.bsr)}</p>`;
-
-    document.getElementById("data-container").innerHTML = content;
+function calculateCAGR(startValue, endValue, years) {
+    // Check for valid inputs
+    if (years <= 0) return 0;
+    
+    // Handle special cases
+    if (startValue <= 0 && endValue <= 0) {
+        // Both negative or zero - calculate growth on absolute values
+        // and then determine if it's growth or decline
+        const absStart = Math.abs(startValue);
+        const absEnd = Math.abs(endValue);
+        
+        if (absStart === 0) return 0; // Can't calculate growth from zero
+        
+        const growth = (Math.pow(absEnd / absStart, 1 / years) - 1) * 100;
+        // If both negative and absolute value increased, it's actually a decline
+        return (startValue < 0 && endValue < 0 && absEnd > absStart) ? -growth : growth;
+    }
+    
+    // One value is negative and one is positive - special handling needed
+    if ((startValue <= 0 && endValue > 0) || (startValue > 0 && endValue <= 0)) {
+        // Can't calculate traditional CAGR with sign change
+        // Return simple annual rate instead
+        return ((endValue - startValue) / Math.abs(startValue) / years) * 100;
+    }
+    
+    // Standard CAGR calculation for positive values
+    return (Math.pow(endValue / startValue, 1 / years) - 1) * 100;
 }
 
 // Handle "Show Table" button click
@@ -86,87 +95,158 @@ document.getElementById("plotTable").addEventListener("click", function () {
 
     const periods = extractedData.extractedData.periods || [];
     const salesValues = extractedData.extractedData.profitLoss.sales?.values || [];
-    const fixedAssetsValues = extractedData.extractedData.balanceSheet.fixedAssets?.values || [];
-    const nfatValues = extractedData.calculatedMetrics.nfat || [];
-    let avgNfatValues = extractedData.calculatedMetrics.avgNfat3Y || [];
-    let npmPercentValues = extractedData.calculatedMetrics.npmPercent || [];
-    let avgNpm3YValues = extractedData.calculatedMetrics.avgNpm3Y || [];
-    let dividendPayoutValues = extractedData.extractedData.profitLoss.dividendPayout?.values || [];
-    let avgDividendPayout3Y = extractedData.calculatedMetrics.avgDividendPayout3Y.map(val => val / 100) || [];
-    let depreciationValues = extractedData.extractedData.profitLoss.depreciation?.values || [];
-    let depreciationPercentValues = extractedData.calculatedMetrics.depreciationPercent || [];
-    let depreciationPercent = extractedData.calculatedMetrics.depreciationPercent || [];
-    let avgDepreciationPercent3Y = extractedData.calculatedMetrics.avgDepreciationPercent3Y || [];
-    let bsrValues = extractedData.calculatedMetrics.bsr || [];
-
+    const avgNfatValues = extractedData.calculatedMetrics.avgNfat3Y || [];
+    const avgNpm3YValues = extractedData.calculatedMetrics.avgNpm3Y || [];
+    const avgDividendPayout3Y = extractedData.calculatedMetrics.avgDividendPayout3Y.map(val => val / 100) || [];
+    const avgDepreciationPercent3Y = extractedData.calculatedMetrics.avgDepreciationPercent3Y || [];
 
     // Ensure BSR calculation is correct
-    bsrValues = avgNfatValues.map((val, i) =>
+    let bsrValues = avgNfatValues.map((val, i) =>
         (val * avgNpm3YValues[i] * (1 - avgDividendPayout3Y[i]) - avgDepreciationPercent3Y[i]) * 100
     );
 
+    // Parse values for calculations
+    const parsedSalesValues = salesValues.map(val => parseFloat(val.replace(/,/g, "")));
+    const parsedBsrValues = bsrValues.map(val => parseFloat(val));
 
+    // Debug information to help diagnose calculation issues
+    console.log("📊 Periods:", periods);
+    console.log("📊 Parsed BSR Values:", parsedBsrValues);
+    console.log("📊 Parsed Sales Values:", parsedSalesValues);
 
-    // 🛠 Fix empty values for display
-    avgNfatValues = avgNfatValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
-    npmPercentValues = npmPercentValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
-    avgNpm3YValues = avgNpm3YValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
-    dividendPayoutValues = dividendPayoutValues.map((val) => {
-        let num = parseFloat(val); // Convert to number
-        return isNaN(num) ? "0.00" : num.toFixed(2);
-    });
-    avgDividendPayout3Y = avgDividendPayout3Y.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));    
-    depreciationPercentValues = depreciationPercentValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
-    depreciationPercent = depreciationPercent.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
-    avgDepreciationPercent3Y = avgDepreciationPercent3Y.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
-    bsrValues = bsrValues.map((val) => (val === undefined || isNaN(val)) ? "0.00" : val.toFixed(2));
+    // Calculate BSR Growth and Sales Growth for TTM, 3, 4, and 5 years
+    let bsrGrowthTTM = 0;
+    let bsrGrowth3Y = 0;
+    let bsrGrowth4Y = 0;
+    let bsrGrowth5Y = 0;
+    let salesGrowthTTM = 0;
+    let salesGrowth3Y = 0;
+    let salesGrowth4Y = 0;
+    let salesGrowth5Y = 0;
 
-
-
-
-
+    const totalPeriods = periods.length;
     
+    // Only calculate if we have enough data
+    
+    // For TTM (latest value compared to value 1 year ago)
+    if (totalPeriods >= 2) {
+        const latestBsr = parsedBsrValues[totalPeriods - 1];
+        const bsr1YearAgo = parsedBsrValues[totalPeriods - 2];
+        
+        const latestSales = parsedSalesValues[totalPeriods - 1];
+        const sales1YearAgo = parsedSalesValues[totalPeriods - 2];
+        
+        console.log("📈 TTM BSR Calculation:", { 
+            latestBsr, 
+            bsr1YearAgo, 
+            years: 1 
+        });
+        console.log("📈 TTM Sales Calculation:", { 
+            latestSales, 
+            sales1YearAgo, 
+            years: 1 
+        });
+        
+        bsrGrowthTTM = calculateCAGR(bsr1YearAgo, latestBsr, 1);
+        salesGrowthTTM = calculateCAGR(sales1YearAgo, latestSales, 1);
+    }
+    
+    // For 3-year growth rate
+    if (totalPeriods >= 4) {
+        // For BSR - use 1 period prior to TTM as ending and shift starting accordingly
+        const endingBsr = parsedBsrValues[totalPeriods - 2]; // 1 period prior to TTM
+        const startingBsr = parsedBsrValues[totalPeriods - 5]; // 3 years back from ending period
+        
+        // For Sales - use 1 period prior to TTM as ending and shift starting accordingly
+        const endingSales = parsedSalesValues[totalPeriods - 2]; // 1 period prior to TTM
+        const startingSales = parsedSalesValues[totalPeriods - 5]; // 3 years back from ending period
+        
+        console.log("📈 3-Year BSR Calculation:", { 
+            endingBsr, 
+            startingBsr, 
+            years: 3 
+        });
+        console.log("📈 3-Year Sales Calculation:", { 
+            endingSales, 
+            startingSales, 
+            years: 3
+        });
+        
+        bsrGrowth3Y = calculateCAGR(startingBsr, endingBsr, 3);
+        salesGrowth3Y = calculateCAGR(startingSales, endingSales, 3);
+    }
+    
+        
+    // For 5-year growth rate
+    if (totalPeriods >= 7) {
+        // For BSR - use 1 period prior to TTM as ending and shift starting accordingly
+        const endingBsr = parsedBsrValues[totalPeriods - 2]; // 1 period prior to TTM
+        const startingBsr = parsedBsrValues[totalPeriods - 7]; // 5 years back from ending period
+        
+        // For Sales - use 1 period prior to TTM as ending and shift starting accordingly
+        const endingSales = parsedSalesValues[totalPeriods - 2]; // 1 period prior to TTM
+        const startingSales = parsedSalesValues[totalPeriods - 7]; // 5 years back from ending period
+        
+        console.log("📈 5-Year BSR Calculation:", { 
+            endingBsr, 
+            startingBsr, 
+            years: 4 
+        });
+        console.log("📈 5-Year Sales Calculation:", { 
+            endingSales, 
+            startingSales, 
+            years: 4
+        });
+        
+        bsrGrowth5Y = calculateCAGR(startingBsr, endingBsr, 5);
+        salesGrowth5Y = calculateCAGR(startingSales, endingSales, 5);
+    }
 
-
-    console.log("✅ Cleaned 3-Year Avg. NFAT for Display:", avgNfatValues);
-    console.log("✅ Cleaned NPM% for Display:", npmPercentValues);
-    console.log("\u2705 Cleaned 3-Year Avg. NPM% for Display:", avgNpm3YValues);
-    console.log("\u2705 Cleaned Dividend Payout % for Display:", dividendPayoutValues);
+    console.log("✅ TTM BSR Growth:", bsrGrowthTTM.toFixed(2) + "%");
+    console.log("✅ 3-Year BSR Growth:", bsrGrowth3Y.toFixed(2) + "%");
+    console.log("✅ 4-Year BSR Growth:", bsrGrowth4Y.toFixed(2) + "%");
+    console.log("✅ 5-Year BSR Growth:", bsrGrowth5Y.toFixed(2) + "%");
+    console.log("✅ TTM Sales Growth:", salesGrowthTTM.toFixed(2) + "%");
+    console.log("✅ 3-Year Sales Growth:", salesGrowth3Y.toFixed(2) + "%");
+    console.log("✅ 4-Year Sales Growth:", salesGrowth4Y.toFixed(2) + "%");
+    console.log("✅ 5-Year Sales Growth:", salesGrowth5Y.toFixed(2) + "%");
 
     // Ensure we have enough data
-    if (periods.length === 0 || salesValues.length === 0 || fixedAssetsValues.length === 0 || nfatValues.length === 0) {
+    if (periods.length === 0) {
         console.warn("⚠️ Not enough data to plot the table.");
         document.getElementById("table-container").innerHTML = "<p>No data available.</p>";
         document.getElementById("table-container").style.display = "block";
         return;
     }
 
-    let tableHTML = `<h3>Financial Metrics Table</h3>
+    // Updated Growth Summary table with TTM and 4-Year periods
+    let tableHTML = `
+    <h3>Growth Summary</h3>
     <table border="1">
         <thead>
-            <tr><th>Period</th><th>Sales</th><th>Fixed Assets</th><th>NFAT</th><th>3-Year Avg. NFAT</th><th>NPM%</th><th>3-Year Avg. NPM%</th><th>Dividend Payout %</th><th>3-Year Avg. Dividend Payout %</th><th>Depreciation</th><th>Dep %</th><th>3-Year Avg. Depreciation</th><th>BSR</th></tr>
+            <tr>
+                <th>Metric</th>
+                <th>TTM Growth</th>
+                <th>3-Year Growth (CAGR)</th>
+                <th>5-Year Growth (CAGR)</th>
+            </tr>
         </thead>
-        <tbody>`;
-
-    for (let i = 0; i < periods.length; i++) {
-        tableHTML += `<tr>
-            <td>${periods[i]}</td>
-            <td>${salesValues[i] || "-"}</td>
-            <td>${fixedAssetsValues[i] || "-"}</td>
-            <td>${!isNaN(nfatValues[i]) ? nfatValues[i].toFixed(2) : "0.00"}</td>
-            <td>${avgNfatValues[i]}</td>
-            <td>${npmPercentValues[i]}</td>
-            <td>${avgNpm3YValues[i]}</td>
-            <td>${dividendPayoutValues[i] || "-"}</td>
-            <td>${avgDividendPayout3Y[i]}</td>
-            <td>${depreciationValues[i] || "-"}</td>
-            <td>${depreciationPercent[i] || "0.00"}</td>
-            <td>${avgDepreciationPercent3Y[i]}</td>
-            <td>${bsrValues[i]}</td>
-        </tr>`;
-    }
-
-    tableHTML += `</tbody></table>`;
+        <tbody>
+            <tr>
+                <td><strong>BSR Growth</strong></td>
+                <td>${bsrGrowthTTM.toFixed(2)}%</td>
+                <td>${bsrGrowth3Y.toFixed(2)}%</td>
+                <td>${bsrGrowth5Y.toFixed(2)}%</td>
+            </tr>
+            <tr>
+                <td><strong>Sales Growth</strong></td>
+                <td>${salesGrowthTTM.toFixed(2)}%</td>
+                <td>${salesGrowth3Y.toFixed(2)}%</td>
+                <td>${salesGrowth5Y.toFixed(2)}%</td>
+            </tr>
+        </tbody>
+    </table>`;
+    
     document.getElementById("table-container").innerHTML = tableHTML;
     document.getElementById("table-container").style.display = "block"; // Show the table
 });
