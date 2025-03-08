@@ -201,7 +201,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
         bsrGrowth5Y = calculateCAGR(startingBsr, endingBsr, 5);
         salesGrowth5Y = calculateCAGR(startingSales, endingSales, 5);
     }
-
+    /*
     console.log("✅ TTM BSR Growth:", bsrGrowthTTM.toFixed(2) + "%");
     console.log("✅ 3-Year BSR Growth:", bsrGrowth3Y.toFixed(2) + "%");
     console.log("✅ 4-Year BSR Growth:", bsrGrowth4Y.toFixed(2) + "%");
@@ -210,6 +210,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
     console.log("✅ 3-Year Sales Growth:", salesGrowth3Y.toFixed(2) + "%");
     console.log("✅ 4-Year Sales Growth:", salesGrowth4Y.toFixed(2) + "%");
     console.log("✅ 5-Year Sales Growth:", salesGrowth5Y.toFixed(2) + "%");
+    */
 
     // Ensure we have enough data
     if (periods.length === 0) {
@@ -272,7 +273,8 @@ document.getElementById("plotTable").addEventListener("click", function () {
     tableHTML += '<p><strong>BSR Growth Health:</strong> <span style="color: ' + (!isBsrNegativeInBothPeriods ? 'green' : 'red') + '; font-weight: bold;">' + (!isBsrNegativeInBothPeriods ? 'Good' : 'Poor') + '</span> - BSR Growth ' + (!isBsrNegativeInBothPeriods ? 'is positive in at least one period' : 'is negative in both 3-Year and 5-Year periods') + '</p>';
     tableHTML += '<p><strong>Important Notes: </strong></p>';
     tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
-    tableHTML += '<li>BSR > Sales Growth indicates efficient capital deployment by Management</li>';
+    tableHTML += '<li>If BSR > Sales Growth indicates efficient capital deployment by Management, can be considered for Investing.</li>';
+    tableHTML += '<li><b>Good BSR is not enough, right entry time is important. Safety Margin should be calculated next (Coming Soon)</b></li>';
     tableHTML += '<li>Improving trend shows management effectiveness over time (3 years vs 5 years)</li>';
     tableHTML += '<li><b>If BSR < Sales Growth or BSR is <span style="color: red;">Negative</span>, it is better to <span style="color: red;">AVOID</span> that stock</b></li>';
     tableHTML += '</ul>';
