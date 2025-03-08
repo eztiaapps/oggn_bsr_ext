@@ -40,7 +40,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         extractedData = message.data; // Store data globally
         
         // Simply show a success message instead of displaying extracted data
-        document.getElementById("data-container").innerHTML = "<p>Data successfully extracted! Click 'Show Table' to view the analysis.</p>";
+        document.getElementById("data-container").innerHTML = "<p>Data successfully extracted! Click 'Stock Report' to view the analysis.</p>";
 
         // Enable "Show Table" button
         document.getElementById("plotTable").disabled = false;
@@ -246,6 +246,29 @@ document.getElementById("plotTable").addEventListener("click", function () {
             </tr>
         </tbody>
     </table>`;
+
+    // Compare BSR growth to Sales growth
+    const isBsrHigherThanSales = {
+        ttm: bsrGrowthTTM > salesGrowthTTM,
+        threeYear: bsrGrowth3Y > salesGrowth3Y,
+        fiveYear: bsrGrowth5Y > salesGrowth5Y
+    };
+
+    // Compare BSR growth improvement
+    const isBsrImproving = bsrGrowth3Y > bsrGrowth5Y;
+        
+    // Add the analysis section using string concatenation
+    tableHTML += '<div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
+    tableHTML += '<p><strong>BSR Growth vs Sales Growth (3-Year):</strong> ' + (isBsrHigherThanSales.threeYear ? 'Good' : 'Poor') + ' - BSR Growth ' + (isBsrHigherThanSales.threeYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
+    tableHTML += '<p><strong>BSR Growth vs Sales Growth (5-Year):</strong> ' + (isBsrHigherThanSales.fiveYear ? 'Good' : 'Poor') + ' - BSR Growth ' + (isBsrHigherThanSales.fiveYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
+    tableHTML += '<p><strong>Important Notes: </strong></p>';
+    tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
+    tableHTML += '<li>BSR > Sales Growth indicates efficient capital deployment by Management</li>';
+    tableHTML += '<li>Improving trend shows management effectiveness over time (3 years vs 5 years)</li>';
+    tableHTML += '<li>If BSR < Sales Growth or BSR is Negative, it is better to avoid that stock</li>';
+    tableHTML += '</ul>';
+    tableHTML += '</div>';
+    
     
     document.getElementById("table-container").innerHTML = tableHTML;
     document.getElementById("table-container").style.display = "block"; // Show the table
