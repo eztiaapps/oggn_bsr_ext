@@ -221,7 +221,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
 
     // Updated Growth Summary table with TTM and 4-Year periods
     let tableHTML = `
-    <h3>Growth Summary</h3>
+    <p><h3>Growth Summary</h3></p>;
     <table border="1">
         <thead>
             <tr>
@@ -259,6 +259,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
         
     // Add the analysis section using string concatenation
     tableHTML += '<div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
+    tableHTML += '<p><strong><h2>Conclusion Notes : </strong></p></h2>';
     tableHTML += '<p><strong>BSR Growth vs Sales Growth (3-Year):</strong> ' + (isBsrHigherThanSales.threeYear ? 'Good' : 'Poor') + ' - BSR Growth ' + (isBsrHigherThanSales.threeYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
     tableHTML += '<p><strong>BSR Growth vs Sales Growth (5-Year):</strong> ' + (isBsrHigherThanSales.fiveYear ? 'Good' : 'Poor') + ' - BSR Growth ' + (isBsrHigherThanSales.fiveYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
     tableHTML += '<p><strong>Important Notes: </strong></p>';
@@ -268,7 +269,15 @@ document.getElementById("plotTable").addEventListener("click", function () {
     tableHTML += '<li>If BSR < Sales Growth or BSR is Negative, it is better to avoid that stock</li>';
     tableHTML += '</ul>';
     tableHTML += '</div>';
-    
+
+    // Contact us section
+    tableHTML += '<div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
+    tableHTML += '<p><strong><h3>Contact Us: </strong></p></h3>';
+    tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
+    tableHTML += '<li>eztiaapps@gmail.com</li>';
+    tableHTML += '<li>Write to us, if you want to connect to SEBI Registered Advisors</li>';
+    tableHTML += '</div>';
+
     
     document.getElementById("table-container").innerHTML = tableHTML;
     document.getElementById("table-container").style.display = "block"; // Show the table
