@@ -2,7 +2,7 @@ let extractedData = null; // Store extracted data globally
 
 document.getElementById("fetchData").addEventListener("click", function () {
     const spinner = document.getElementById("spinner");
-    document.getElementById("data-container").innerHTML = "<p>Fetching data...</p>";
+    document.getElementById("data-container").innerHTML = "<p>Connecting AI Assistant...</p>";
     document.getElementById("plotTable").disabled = true; // Disable "Show Table" button until data is ready
     spinner.style.display = "block"; // Show spinner
 
@@ -221,7 +221,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
 
     // Updated Growth Summary table with TTM and 4-Year periods
     let tableHTML = `
-    <h3>Growth Summary</h3>
+    <p><h3>Growth Summary</h3></p>
     <table border="1">
         <thead>
             <tr>
@@ -256,19 +256,37 @@ document.getElementById("plotTable").addEventListener("click", function () {
 
     // Compare BSR growth improvement
     const isBsrImproving = bsrGrowth3Y > bsrGrowth5Y;
+    // Check for negative BSR in both periods
+    const isBsrNegativeInBothPeriods = bsrGrowth3Y < 0 && bsrGrowth5Y < 0;
+
+    // Function to format value with color based on sign
+    function formatWithColor(value) {
+        const isNegative = value < 0;
+        return '<span style="color: ' + (isNegative ? 'red' : 'black') + ';">' + value.toFixed(2) + '%</span>';
+    }
         
     // Add the analysis section using string concatenation
     tableHTML += '<div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
-    tableHTML += '<p><strong>BSR Growth vs Sales Growth (3-Year):</strong> ' + (isBsrHigherThanSales.threeYear ? 'Good' : 'Poor') + ' - BSR Growth ' + (isBsrHigherThanSales.threeYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
-    tableHTML += '<p><strong>BSR Growth vs Sales Growth (5-Year):</strong> ' + (isBsrHigherThanSales.fiveYear ? 'Good' : 'Poor') + ' - BSR Growth ' + (isBsrHigherThanSales.fiveYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
+    tableHTML += '<p><strong>BSR Growth vs Sales Growth (3-Year):</strong> <span style="color: ' + (isBsrHigherThanSales.threeYear ? 'green' : 'red') + '; font-weight: bold;">' + (isBsrHigherThanSales.threeYear ? 'Good' : 'Poor') + '</span> - BSR Growth ' + (isBsrHigherThanSales.threeYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
+    tableHTML += '<p><strong>BSR Growth vs Sales Growth (5-Year):</strong> <span style="color: ' + (isBsrHigherThanSales.fiveYear ? 'green' : 'red') + '; font-weight: bold;">' + (isBsrHigherThanSales.fiveYear ? 'Good' : 'Poor') + '</span> - BSR Growth ' + (isBsrHigherThanSales.fiveYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
+    tableHTML += '<p><strong>BSR Growth Health:</strong> <span style="color: ' + (!isBsrNegativeInBothPeriods ? 'green' : 'red') + '; font-weight: bold;">' + (!isBsrNegativeInBothPeriods ? 'Good' : 'Poor') + '</span> - BSR Growth ' + (!isBsrNegativeInBothPeriods ? 'is positive in at least one period' : 'is negative in both 3-Year and 5-Year periods') + '</p>';
     tableHTML += '<p><strong>Important Notes: </strong></p>';
     tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
     tableHTML += '<li>BSR > Sales Growth indicates efficient capital deployment by Management</li>';
     tableHTML += '<li>Improving trend shows management effectiveness over time (3 years vs 5 years)</li>';
-    tableHTML += '<li>If BSR < Sales Growth or BSR is Negative, it is better to avoid that stock</li>';
+    tableHTML += '<li><b>If BSR < Sales Growth or BSR is <span style="color: red;">Negative</span>, it is better to <span style="color: red;">AVOID</span> that stock</b></li>';
     tableHTML += '</ul>';
     tableHTML += '</div>';
-    
+
+
+    // Contact us section
+    tableHTML += '<div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
+    tableHTML += '<p><strong><h3>Contact Us: </strong></p></h3>';
+    tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
+    tableHTML += '<li>eztiaapps@gmail.com</li>';
+    tableHTML += '<li>Write to us, if you want to connect to SEBI Registered Advisors</li>';
+    tableHTML += '</div>';
+
     
     document.getElementById("table-container").innerHTML = tableHTML;
     document.getElementById("table-container").style.display = "block"; // Show the table
