@@ -1,0 +1,23 @@
+Privacy Policy for [Your Extension Name]
+1. Information We Collect
+This extension does not collect, store, or share personal data. It only processes publicly available data from the websites the user visits, as necessary for its functionality.
+
+2. How We Use Information
+The extension retrieves and processes financial data from https://www.screener.in/* solely for analysis purposes.
+No data is transmitted to external servers. All processing happens locally within the user's browser.
+3. Permissions & Data Access
+Active Tab Permission: Needed to analyze content on the currently open webpage.
+Host Permissions: Required to extract financial data for user-initiated calculations.
+The extension does not modify or manipulate any website data beyond its intended function.
+4. Data Storage & Sharing
+No personal or sensitive user data is collected, stored, or shared.
+The extension does not track browsing history or send data to third-party services.
+5. User Rights & Control
+Users can uninstall the extension at any time to stop all functionalities.
+No account creation, login, or data submission is required.
+6. Updates to Privacy Policy
+We may update this policy if required to comply with Chrome Web Store guidelines. Any changes will be reflected in this section.
+
+Contact Us:
+For any questions regarding this privacy policy, please reach out to [your email or support page].
+
