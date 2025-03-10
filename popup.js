@@ -258,7 +258,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
     // Compare BSR growth improvement
     const isBsrImproving = bsrGrowth3Y > bsrGrowth5Y;
     // Check for negative BSR in both periods
-    const isBsrNegativeInBothPeriods = bsrGrowth3Y < 0 && bsrGrowth5Y < 0;
+    const isBsrNegativeInBothPeriods = bsrGrowth3Y <= 0 && bsrGrowth5Y < 0;
 
     // Function to format value with color based on sign
     function formatWithColor(value) {
@@ -277,6 +277,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
     tableHTML += '<li><b>Good BSR is not enough, right entry time is important. Safety Margin should be calculated next (Coming Soon)</b></li>';
     tableHTML += '<li>Improving trend shows management effectiveness over time (3 years vs 5 years)</li>';
     tableHTML += '<li><b>If BSR < Sales Growth or BSR is <span style="color: red;">Negative</span>, it is better to <span style="color: red;">AVOID</span> that stock</b></li>';
+    tableHTML += '<li>Some Business could have good BSR, but they have Poor Sales, avoid such stocks too!</li>';
     tableHTML += '</ul>';
     tableHTML += '</div>';
 
