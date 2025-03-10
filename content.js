@@ -5,6 +5,13 @@ function extractFinancialData() {
     const extractedData = { profitLoss: {}, balanceSheet: {} };
     const profitLossSection = document.querySelector("#profit-loss");
 
+    // Extract the stock name
+    const stockNameElement = document.querySelector('h1.margin-0.show-from-tablet-landscape');
+    const stockName = stockNameElement ? stockNameElement.textContent.trim() : 'Unknown Stock';
+
+// Then include it in your extractedData object
+extractedData.stockName = stockName;
+
     if (profitLossSection) {
         // Extract always-visible data
         extractedData.profitLoss.sales = extractRowData(profitLossSection, "Sales");

@@ -222,7 +222,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
 
     // Updated Growth Summary table with TTM and 4-Year periods
     let tableHTML = `
-    <p><h3>Growth Summary</h3></p>
+    <p><h3>Growth Summary${extractedData.extractedData.stockName ? ' - ' + extractedData.extractedData.stockName : ''}</h3></p>
     <table border="1">
         <thead>
             <tr>
@@ -287,6 +287,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
     tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
     tableHTML += '<li>eztiaapps@gmail.com</li>';
     tableHTML += '<li>Write to us, if you want to connect to SEBI Registered Advisors</li>';
+    tableHTML += '<li>Try it for yourself: datalotus.streamlit.app</li>';
     tableHTML += '</div>';
 
     
