@@ -227,7 +227,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
         <thead>
             <tr>
                 <th>Metric</th>
-                <th>TTM Growth</th>
+                <!--<th>TTM Growth</th>-->
                 <th>3-Year Growth (CAGR)</th>
                 <th>5-Year Growth (CAGR)</th>
             </tr>
@@ -235,13 +235,13 @@ document.getElementById("plotTable").addEventListener("click", function () {
         <tbody>
             <tr>
                 <td><strong>BSR Growth</strong></td>
-                <td>${bsrGrowthTTM.toFixed(2)}%</td>
+                <!--<td>${bsrGrowthTTM.toFixed(2)}%</td>-->
                 <td>${bsrGrowth3Y.toFixed(2)}%</td>
                 <td>${bsrGrowth5Y.toFixed(2)}%</td>
             </tr>
             <tr>
                 <td><strong>Sales Growth</strong></td>
-                <td>${salesGrowthTTM.toFixed(2)}%</td>
+                <!--<td>${salesGrowthTTM.toFixed(2)}%</td>-->
                 <td>${salesGrowth3Y.toFixed(2)}%</td>
                 <td>${salesGrowth5Y.toFixed(2)}%</td>
             </tr>
