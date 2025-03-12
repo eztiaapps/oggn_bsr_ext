@@ -14,7 +14,12 @@ extractedData.stockName = stockName;
 
     if (profitLossSection) {
         // Extract always-visible data
-        extractedData.profitLoss.sales = extractRowData(profitLossSection, "Sales");
+        // Extract always-visible data - handle both "Sales" and "Revenue"
+        const salesData = extractRowData(profitLossSection, "Sales") || extractRowData(profitLossSection, "Revenue");
+        extractedData.profitLoss.sales = salesData;
+        // Save under both keys for consistency
+        extractedData.profitLoss.revenue = salesData;
+        
         extractedData.profitLoss.eps = extractRowData(profitLossSection, "EPS in Rs");
         extractedData.profitLoss.dividendPayout = extractRowData(profitLossSection, "Dividend Payout %");
         extractedData.profitLoss.depreciation = extractRowData(profitLossSection, "Depreciation");
