@@ -50,42 +50,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-/**
- * Calculate compound annual growth rate (CAGR)
- * @param {number} startValue - The initial value
- * @param {number} endValue - The final value
- * @param {number} years - Number of years between start and end
- * @returns {number} CAGR as a percentage
- */
-function calculateCAGR(startValue, endValue, years) {
-    // Check for valid inputs
-    if (years <= 0) return 0;
+// Calculate normal Sales Growth for each period (year-over-year growth)
+function calculateSalesGrowth(salesValues) {
+    const result = [];
+    const parsedSales = salesValues.map(val => parseFloat(val.replace(/,/g, "")));
     
-    // Handle special cases
-    if (startValue <= 0 && endValue <= 0) {
-        // Both negative or zero - calculate growth on absolute values
-        // and then determine if it's growth or decline
-        const absStart = Math.abs(startValue);
-        const absEnd = Math.abs(endValue);
-        
-        if (absStart === 0) return 0; // Can't calculate growth from zero
-        
-        const growth = (Math.pow(absEnd / absStart, 1 / years) - 1) * 100;
-        // If both negative and absolute value increased, it's actually a decline
-        return (startValue < 0 && endValue < 0 && absEnd > absStart) ? -growth : growth;
+    // For each period, calculate the year-over-year growth
+    for (let i = 0; i < parsedSales.length; i++) {
+        // Need at least 2 periods of data to calculate growth
+        if (i >= 1) {
+            const endValue = parsedSales[i];
+            const startValue = parsedSales[i - 1];
+            
+            // Calculate simple percentage growth
+            const growth = startValue !== 0 ? ((endValue - startValue) / startValue) * 100 : 0;
+            result.push(growth);
+        } else {
+            // Not enough history, push null or a placeholder
+            result.push(null);
+        }
     }
     
-    // One value is negative and one is positive - special handling needed
-    if ((startValue <= 0 && endValue > 0) || (startValue > 0 && endValue <= 0)) {
-        // Can't calculate traditional CAGR with sign change
-        // Return simple annual rate instead
-        return ((endValue - startValue) / Math.abs(startValue) / years) * 100;
-    }
-    
-    // Standard CAGR calculation for positive values
-    return (Math.pow(endValue / startValue, 1 / years) - 1) * 100;
+    return result;
 }
 
+// Handle "Show Table" button click
 // Handle "Show Table" button click
 document.getElementById("plotTable").addEventListener("click", function () {
     if (!extractedData) {
@@ -95,122 +84,88 @@ document.getElementById("plotTable").addEventListener("click", function () {
 
     const periods = extractedData.extractedData.periods || [];
     const salesValues = extractedData.extractedData.profitLoss.sales?.values || [];
+    
+    // Access the metrics directly from the calculatedMetrics object
     const avgNfatValues = extractedData.calculatedMetrics.avgNfat3Y || [];
     const avgNpm3YValues = extractedData.calculatedMetrics.avgNpm3Y || [];
-    const avgDividendPayout3Y = extractedData.calculatedMetrics.avgDividendPayout3Y.map(val => val / 100) || [];
+    const avgDividendPayout3Y = extractedData.calculatedMetrics.avgDividendPayout3Y || [];
     const avgDepreciationPercent3Y = extractedData.calculatedMetrics.avgDepreciationPercent3Y || [];
 
-    // Ensure BSR calculation is correct
-    let bsrValues = avgNfatValues.map((val, i) =>
-        (val * avgNpm3YValues[i] * (1 - avgDividendPayout3Y[i]) - avgDepreciationPercent3Y[i]) * 100
-    );
+    // Debug the values received to verify we're accessing them correctly
+    console.log("📊 Detailed Raw Data:");
+    console.log("- Periods:", periods);
+    console.log("- Sales Values:", salesValues);
+    console.log("- Full calculatedMetrics:", extractedData.calculatedMetrics);
+    console.log("- Avg NFAT 3Y (raw):", avgNfatValues);
+    console.log("- Avg NPM 3Y (raw):", avgNpm3YValues);
+    console.log("- Avg Dividend Payout 3Y (raw):", avgDividendPayout3Y);
+    console.log("- Avg Depreciation % 3Y (raw):", avgDepreciationPercent3Y);
 
-    // Parse values for calculations
-    const parsedSalesValues = salesValues.map(val => parseFloat(val.replace(/,/g, "")));
-    const parsedBsrValues = bsrValues.map(val => parseFloat(val));
-
-    // Debug information to help diagnose calculation issues
-    console.log("📊 Periods:", periods);
-    console.log("📊 Parsed BSR Values:", parsedBsrValues);
-    console.log("📊 Parsed Sales Values:", parsedSalesValues);
-
-    // Calculate BSR Growth and Sales Growth for TTM, 3, 4, and 5 years
-    let bsrGrowthTTM = 0;
-    let bsrGrowth3Y = 0;
-    let bsrGrowth4Y = 0;
-    let bsrGrowth5Y = 0;
-    let salesGrowthTTM = 0;
-    let salesGrowth3Y = 0;
-    let salesGrowth4Y = 0;
-    let salesGrowth5Y = 0;
-
-    const totalPeriods = periods.length;
+    // Parse the sales values
+    const parsedSalesValues = salesValues.map(val => {
+        if (!val) return 0;
+        return parseFloat(val.replace(/,/g, "")) || 0;
+    });
     
-    // Only calculate if we have enough data
-    
-    // For TTM (latest value compared to value 1 year ago)
-    if (totalPeriods >= 2) {
-        const latestBsr = parsedBsrValues[totalPeriods - 1];
-        const bsr1YearAgo = parsedBsrValues[totalPeriods - 2];
+    // Fix BSR calculation - make extra sure we're handling all values safely
+    const bsrValues = [];
+    for (let i = 0; i < periods.length; i++) {
+        // Get the values for this period with appropriate fallbacks
+        const nfat = typeof avgNfatValues[i] === 'number' ? avgNfatValues[i] : 0;
+        const npm = typeof avgNpm3YValues[i] === 'number' ? avgNpm3YValues[i] : 0;
+        const divPayout = typeof avgDividendPayout3Y[i] === 'number' ? avgDividendPayout3Y[i] / 100 : 0; // Convert from percentage to decimal
+        const deprPercent = typeof avgDepreciationPercent3Y[i] === 'number' ? avgDepreciationPercent3Y[i] : 0;
         
-        const latestSales = parsedSalesValues[totalPeriods - 1];
-        const sales1YearAgo = parsedSalesValues[totalPeriods - 2];
-        
-        console.log("📈 TTM BSR Calculation:", { 
-            latestBsr, 
-            bsr1YearAgo, 
-            years: 1 
-        });
-        console.log("📈 TTM Sales Calculation:", { 
-            latestSales, 
-            sales1YearAgo, 
-            years: 1 
+        // For troubleshooting, log each component for this period
+        console.log(`Period ${periods[i]} components:`, {
+            nfat,
+            npm,
+            divPayout: divPayout * 100, // convert back to % for logging
+            deprPercent
         });
         
-        bsrGrowthTTM = calculateCAGR(bsr1YearAgo, latestBsr, 1);
-        salesGrowthTTM = calculateCAGR(sales1YearAgo, latestSales, 1);
+        // Calculate BSR using the formula: (NFAT * NPM * (1 - DivPayout) - DepreciationPercent) * 100
+        const bsr = (nfat * npm * (1 - divPayout) - deprPercent) * 100;
+        console.log(`Period ${periods[i]} BSR calculation:`, {
+            nfatComponent: nfat,
+            npmComponent: npm,
+            divPayoutEffect: (1 - divPayout),
+            combinedFactor: nfat * npm * (1 - divPayout),
+            deprEffect: deprPercent,
+            finalBSR: bsr
+        });
+        
+        bsrValues.push(isNaN(bsr) ? 0 : bsr);
     }
     
-    // For 3-year growth rate
-    if (totalPeriods >= 4) {
-        // For BSR - use 1 period prior to TTM as ending and shift starting accordingly
-        const endingBsr = parsedBsrValues[totalPeriods - 2]; // 1 period prior to TTM
-        const startingBsr = parsedBsrValues[totalPeriods - 5]; // 3 years back from ending period
-        
-        // For Sales - use 1 period prior to TTM as ending and shift starting accordingly
-        const endingSales = parsedSalesValues[totalPeriods - 2]; // 1 period prior to TTM
-        const startingSales = parsedSalesValues[totalPeriods - 5]; // 3 years back from ending period
-        
-        console.log("📈 3-Year BSR Calculation:", { 
-            endingBsr, 
-            startingBsr, 
-            years: 3 
-        });
-        console.log("📈 3-Year Sales Calculation:", { 
-            endingSales, 
-            startingSales, 
-            years: 3
-        });
-        
-        bsrGrowth3Y = calculateCAGR(startingBsr, endingBsr, 3);
-        salesGrowth3Y = calculateCAGR(startingSales, endingSales, 3);
+    console.log("📊 Calculated BSR Values:", bsrValues);
+
+    // Calculate year-over-year sales growth
+    const salesGrowthYoY = [];
+    for (let i = 0; i < parsedSalesValues.length; i++) {
+        if (i === 0) {
+            // First period has no prior period to compare with
+            salesGrowthYoY.push(null);
+        } else {
+            const currentSales = parsedSalesValues[i];
+            const previousSales = parsedSalesValues[i-1];
+            
+            if (previousSales && previousSales > 0) {
+                const growthRate = ((currentSales - previousSales) / previousSales) * 100;
+                salesGrowthYoY.push(growthRate);
+            } else {
+                salesGrowthYoY.push(null);
+            }
+        }
     }
     
-        
-    // For 5-year growth rate
-    if (totalPeriods >= 7) {
-        // For BSR - use 1 period prior to TTM as ending and shift starting accordingly
-        const endingBsr = parsedBsrValues[totalPeriods - 2]; // 1 period prior to TTM
-        const startingBsr = parsedBsrValues[totalPeriods - 7]; // 5 years back from ending period
-        
-        // For Sales - use 1 period prior to TTM as ending and shift starting accordingly
-        const endingSales = parsedSalesValues[totalPeriods - 2]; // 1 period prior to TTM
-        const startingSales = parsedSalesValues[totalPeriods - 7]; // 5 years back from ending period
-        
-        console.log("📈 5-Year BSR Calculation:", { 
-            endingBsr, 
-            startingBsr, 
-            years: 4 
-        });
-        console.log("📈 5-Year Sales Calculation:", { 
-            endingSales, 
-            startingSales, 
-            years: 4
-        });
-        
-        bsrGrowth5Y = calculateCAGR(startingBsr, endingBsr, 5);
-        salesGrowth5Y = calculateCAGR(startingSales, endingSales, 5);
-    }
-    /*
-    console.log("✅ TTM BSR Growth:", bsrGrowthTTM.toFixed(2) + "%");
-    console.log("✅ 3-Year BSR Growth:", bsrGrowth3Y.toFixed(2) + "%");
-    console.log("✅ 4-Year BSR Growth:", bsrGrowth4Y.toFixed(2) + "%");
-    console.log("✅ 5-Year BSR Growth:", bsrGrowth5Y.toFixed(2) + "%");
-    console.log("✅ TTM Sales Growth:", salesGrowthTTM.toFixed(2) + "%");
-    console.log("✅ 3-Year Sales Growth:", salesGrowth3Y.toFixed(2) + "%");
-    console.log("✅ 4-Year Sales Growth:", salesGrowth4Y.toFixed(2) + "%");
-    console.log("✅ 5-Year Sales Growth:", salesGrowth5Y.toFixed(2) + "%");
-    */
+    console.log("📊 Calculated Sales Growth YoY:", salesGrowthYoY);
+
+    // Get the 5 most recent periods (or fewer if not available)
+    const recentPeriodsCount = Math.min(5, periods.length);
+    const recentPeriods = periods.slice(-recentPeriodsCount);
+    const recentBsrValues = bsrValues.slice(-recentPeriodsCount);
+    const recentSalesGrowthYoY = salesGrowthYoY.slice(-recentPeriodsCount);
 
     // Ensure we have enough data
     if (periods.length === 0) {
@@ -220,67 +175,85 @@ document.getElementById("plotTable").addEventListener("click", function () {
         return;
     }
 
-    // Updated Growth Summary table with TTM and 4-Year periods
+    // Function to format value with color based on sign
+    function formatWithColor(value) {
+        if (value === null || isNaN(value)) return '<span>N/A</span>';
+        const isNegative = value < 0;
+        return '<span style="color: ' + (isNegative ? 'red' : 'green') + ';">' + value.toFixed(2) + '%</span>';
+    }
+
+    // Create the new growth summary table with BSR values and YoY Sales Growth
     let tableHTML = `
     <p><h3>Growth Summary${extractedData.extractedData.stockName ? ' - ' + extractedData.extractedData.stockName : ''}</h3></p>
-    <table border="1">
+    <table border="1" style="width: 100%; border-collapse: collapse;">
         <thead>
             <tr>
-                <th>Metric</th>
-                <!--<th>TTM Growth</th>-->
-                <th>3-Year Growth (CAGR)</th>
-                <th>5-Year Growth (CAGR)</th>
+                <th style="padding: 8px; background-color: #f2f2f2;">Metric</th>`;
+    
+    // Add period headers
+    recentPeriods.forEach(period => {
+        tableHTML += `<th style="padding: 8px; background-color: #f2f2f2;">${period}</th>`;
+    });
+    
+    tableHTML += `
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><strong>BSR Growth</strong></td>
-                <!--<td>${bsrGrowthTTM.toFixed(2)}%</td>-->
-                <td>${bsrGrowth3Y.toFixed(2)}%</td>
-                <td>${bsrGrowth5Y.toFixed(2)}%</td>
+                <td style="padding: 8px; font-weight: bold;">BSR Value</td>`;
+    
+    // Add BSR values
+    recentBsrValues.forEach(value => {
+        tableHTML += `<td style="padding: 8px; text-align: right;">${formatWithColor(value)}</td>`;
+    });
+    
+    tableHTML += `
             </tr>
             <tr>
-                <td><strong>Sales Growth</strong></td>
-                <!--<td>${salesGrowthTTM.toFixed(2)}%</td>-->
-                <td>${salesGrowth3Y.toFixed(2)}%</td>
-                <td>${salesGrowth5Y.toFixed(2)}%</td>
+                <td style="padding: 8px; font-weight: bold;">Sales Growth Y-o-Y</td>`;
+    
+    // Add Sales Growth YoY values
+    recentSalesGrowthYoY.forEach(value => {
+        tableHTML += `<td style="padding: 8px; text-align: right;">${formatWithColor(value)}</td>`;
+    });
+    
+    tableHTML += `
             </tr>
         </tbody>
     </table>`;
 
-    // Compare BSR growth to Sales growth
-    const isBsrHigherThanSales = {
-        ttm: bsrGrowthTTM > salesGrowthTTM,
-        threeYear: bsrGrowth3Y > salesGrowth3Y,
-        fiveYear: bsrGrowth5Y > salesGrowth5Y
-    };
+    
 
-    // Compare BSR growth improvement
-    const isBsrImproving = bsrGrowth3Y > bsrGrowth5Y;
-    // Check for negative BSR in both periods
-    const isBsrNegativeInBothPeriods = bsrGrowth3Y <= 0 && bsrGrowth5Y < 0;
-
-    // Function to format value with color based on sign
-    function formatWithColor(value) {
-        const isNegative = value < 0;
-        return '<span style="color: ' + (isNegative ? 'red' : 'black') + ';">' + value.toFixed(2) + '%</span>';
-    }
-        
-    // Add the analysis section using string concatenation
+    // Add the analysis section
     tableHTML += '<div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
-    tableHTML += '<p><strong>BSR Growth vs Sales Growth (3-Year):</strong> <span style="color: ' + (isBsrHigherThanSales.threeYear ? 'green' : 'red') + '; font-weight: bold;">' + (isBsrHigherThanSales.threeYear ? 'Good' : 'Poor') + '</span> - BSR Growth ' + (isBsrHigherThanSales.threeYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
-    tableHTML += '<p><strong>BSR Growth vs Sales Growth (5-Year):</strong> <span style="color: ' + (isBsrHigherThanSales.fiveYear ? 'green' : 'red') + '; font-weight: bold;">' + (isBsrHigherThanSales.fiveYear ? 'Good' : 'Poor') + '</span> - BSR Growth ' + (isBsrHigherThanSales.fiveYear ? 'is' : 'is not') + ' higher than Sales Growth</p>';
-    tableHTML += '<p><strong>BSR Growth Health:</strong> <span style="color: ' + (!isBsrNegativeInBothPeriods ? 'green' : 'red') + '; font-weight: bold;">' + (!isBsrNegativeInBothPeriods ? 'Good' : 'Poor') + '</span> - BSR Growth ' + (!isBsrNegativeInBothPeriods ? 'is positive in at least one period' : 'is negative in both 3-Year and 5-Year periods') + '</p>';
+    tableHTML += '<p><strong>BSR Analysis:</strong></p>';
+    
+    // Calculate average BSR value for recent periods
+    const validBsrValues = recentBsrValues.filter(val => !isNaN(val) && val !== null);
+    const avgBsrValue = validBsrValues.length > 0 
+        ? validBsrValues.reduce((sum, val) => sum + val, 0) / validBsrValues.length 
+        : 0;
+    
+    // Determine if BSR values are improving (latest > average)
+    const latestBsrValue = recentBsrValues[recentBsrValues.length - 1] || 0;
+    const isBsrImproving = latestBsrValue > avgBsrValue;
+    
+    // Count positive BSR values
+    const positiveBsrCount = validBsrValues.filter(val => val > 0).length;
+    const bsrHealth = positiveBsrCount > validBsrValues.length / 2 ? 'Good' : 'Poor';
+    
+    tableHTML += '<p><strong>BSR Trend:</strong> <span style="color: ' + (isBsrImproving ? 'green' : 'red') + '; font-weight: bold;">' + (isBsrImproving ? 'Improving' : 'Declining') + '</span> - Latest BSR value is ' + (isBsrImproving ? 'higher' : 'lower') + ' than average</p>';
+    tableHTML += '<p><strong>BSR Health:</strong> <span style="color: ' + (bsrHealth === 'Good' ? 'green' : 'red') + '; font-weight: bold;">' + bsrHealth + '</span> - BSR is positive in ' + positiveBsrCount + ' out of ' + validBsrValues.length + ' periods</p>';
+    
     tableHTML += '<p><strong>Important Notes: </strong></p>';
     tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
     tableHTML += '<li>If BSR > Sales Growth indicates efficient capital deployment by Management, can be considered for Investing.</li>';
     tableHTML += '<li><b>Good BSR is not enough, right entry time is important. Safety Margin should be calculated next (Coming Soon)</b></li>';
-    tableHTML += '<li>Improving trend shows management effectiveness over time (3 years vs 5 years)</li>';
-    tableHTML += '<li><b>If BSR < Sales Growth or BSR is <span style="color: red;">Negative</span>, it is better to <span style="color: red;">AVOID</span> that stock</b></li>';
+    tableHTML += '<li>Improving trend shows management effectiveness over time</li>';
+    tableHTML += '<li><b>If BSR is <span style="color: red;">Negative</span>, it is better to <span style="color: red;">AVOID</span> that stock</b></li>';
     tableHTML += '<li>Some Business could have good BSR, but they have Poor Sales, avoid such stocks too!</li>';
     tableHTML += '</ul>';
     tableHTML += '</div>';
-
 
     // Contact us section
     tableHTML += '<div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
@@ -291,7 +264,6 @@ document.getElementById("plotTable").addEventListener("click", function () {
     tableHTML += '<li>Try it for yourself: datalotus.streamlit.app</li>';
     tableHTML += '</div>';
 
-    
     document.getElementById("table-container").innerHTML = tableHTML;
     document.getElementById("table-container").style.display = "block"; // Show the table
 });
