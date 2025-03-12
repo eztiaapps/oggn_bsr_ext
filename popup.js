@@ -222,73 +222,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
         </tbody>
     </table>`;
 
-    // Add the raw data table for verification
-    tableHTML += `
-    <p><h4>Component Values (For Verification)</h4></p>
-    <table border="1" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-        <thead>
-            <tr>
-                <th style="padding: 6px; background-color: #f2f2f2;">Component</th>`;
     
-    // Add period headers for the component table
-    recentPeriods.forEach(period => {
-        tableHTML += `<th style="padding: 6px; background-color: #f2f2f2;">${period}</th>`;
-    });
-    
-    tableHTML += `
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td style="padding: 6px;">NFAT (3Y Avg)</td>`;
-    
-    // Add NFAT values for recent periods only
-    avgNfatValues.slice(-recentPeriodsCount).forEach(value => {
-        // Make sure we handle null, undefined, or NaN values safely
-        const safeValue = (typeof value === 'number' && !isNaN(value)) ? value : 0;
-        tableHTML += `<td style="padding: 6px; text-align: right;">${safeValue.toFixed(4)}</td>`;
-    });
-    
-    tableHTML += `
-            </tr>
-            <tr>
-                <td style="padding: 6px;">NPM (3Y Avg)</td>`;
-    
-    // Add NPM values for recent periods only
-    avgNpm3YValues.slice(-recentPeriodsCount).forEach(value => {
-        // Make sure we handle null, undefined, or NaN values safely
-        const safeValue = (typeof value === 'number' && !isNaN(value)) ? value : 0;
-        tableHTML += `<td style="padding: 6px; text-align: right;">${safeValue.toFixed(4)}</td>`;
-    });
-    
-    tableHTML += `
-            </tr>
-            <tr>
-                <td style="padding: 6px;">Div Payout (3Y Avg)</td>`;
-    
-    // Add Dividend Payout values for recent periods only
-    avgDividendPayout3Y.slice(-recentPeriodsCount).forEach(value => {
-        // Make sure we handle null, undefined, or NaN values safely
-        const safeValue = (typeof value === 'number' && !isNaN(value)) ? value : 0;
-        tableHTML += `<td style="padding: 6px; text-align: right;">${safeValue.toFixed(2)}%</td>`;
-    });
-    
-    tableHTML += `
-            </tr>
-            <tr>
-                <td style="padding: 6px;">Depreciation % (3Y Avg)</td>`;
-    
-    // Add Depreciation % values for recent periods only
-    avgDepreciationPercent3Y.slice(-recentPeriodsCount).forEach(value => {
-        // Make sure we handle null, undefined, or NaN values safely
-        const safeValue = (typeof value === 'number' && !isNaN(value)) ? value : 0;
-        tableHTML += `<td style="padding: 6px; text-align: right;">${safeValue.toFixed(4)}</td>`;
-    });
-    
-    tableHTML += `
-            </tr>
-        </tbody>
-    </table>`;
 
     // Add the analysis section
     tableHTML += '<div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
