@@ -1,4 +1,6 @@
+//version: 12 March 2025
 console.log("✅ Content script loaded successfully!");
+
 
 // Function to extract financial data
 function extractFinancialData() {
