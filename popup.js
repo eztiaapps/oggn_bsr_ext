@@ -262,6 +262,8 @@ document.getElementById("plotTable").addEventListener("click", function () {
     tableHTML += '<li>eztiaapps@gmail.com</li>';
     tableHTML += '<li>Write to us, if you want to connect to SEBI Registered Advisors</li>';
     tableHTML += '<li>Try the APP here: <a href="https://chromewebstore.google.com/detail/datalotus-portfolio-assis/iohllegnicbflhjdpdjifpdodooofphj" target="_blank" rel="noopener noreferrer">Datalotus Portfolio Assistant</a></li>';
+    tableHTML += '<li>Last updated: 16-March-2025</li>';
+
     tableHTML += '</div>';
 
     document.getElementById("table-container").innerHTML = tableHTML;
