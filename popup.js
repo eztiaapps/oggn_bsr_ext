@@ -247,8 +247,8 @@ document.getElementById("plotTable").addEventListener("click", function () {
     
     tableHTML += '<p><strong>Important Notes: </strong></p>';
     tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
-    tableHTML += '<li>If BSR > Sales Growth indicates efficient capital deployment by Management, can be considered for Investing.</li>';
-    tableHTML += '<li><b>Good BSR is not enough, right entry time is important. Safety Margin should be calculated next (Coming Soon)</b></li>';
+    tableHTML += '<li>If BSR > Sales Growth indicates efficient capital deployment by Management, can be considered for Investing. High BSR means they can continue to improve Sales without taking debt or diluting the shares.</li>';
+    tableHTML += '<li><b>Good BSR is not enough, Sales Growth is important. Then right entry time is important. Safety Margin should be calculated next (Coming Soon)</b></li>';
     tableHTML += '<li>Improving trend shows management effectiveness over time</li>';
     tableHTML += '<li><b>If BSR is <span style="color: red;">Negative</span>, it is better to <span style="color: red;">AVOID</span> that stock</b></li>';
     tableHTML += '<li>Some Business could have good BSR, but they have Poor Sales, avoid such stocks too!</li>';
@@ -261,7 +261,7 @@ document.getElementById("plotTable").addEventListener("click", function () {
     tableHTML += '<ul style="margin-top: 10px; margin-bottom: 0;">';
     tableHTML += '<li>eztiaapps@gmail.com</li>';
     tableHTML += '<li>Write to us, if you want to connect to SEBI Registered Advisors</li>';
-    tableHTML += '<li>Try it for yourself: datalotus.streamlit.app</li>';
+    tableHTML += '<li>Try the APP here: <a href="https://chromewebstore.google.com/detail/datalotus-portfolio-assis/iohllegnicbflhjdpdjifpdodooofphj" target="_blank" rel="noopener noreferrer">Datalotus Portfolio Assistant</a></li>';
     tableHTML += '</div>';
 
     document.getElementById("table-container").innerHTML = tableHTML;
